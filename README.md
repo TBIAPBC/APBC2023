@@ -22,12 +22,12 @@ Tuesdays and Wednesdays before the next meeting should be used for code review a
 
 Upon receiving code review and feedback, you are encouraged to commit code revisions prior to our Thursday meetings.
 
-Please note: As we will meet on Thursdays, the latest possible date for a submission is on Tuesdays at 10:00 AM. Please find the assignment descriptions in the respective subdirectories.
+Please note: As we will meet on Thursdays, the latest possible date for a submission is on Tuesdays at 09:30 AM. Please find the assignment descriptions in the respective subdirectories.
 
 
-* Mar-02-2023 (A0) --- Initial meeting / Github submission and warm up 
+* Mar-02-2023 (A0) --- Initial meeting / Github submission and warm up
 
-* Mar-09-2023 (A1) -- Word Count
+* Mar-09-2023 (A1) --- Word Count
 
 * Mar-16-2023 (A2) --- Optimization
 
