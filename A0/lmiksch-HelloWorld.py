@@ -9,8 +9,10 @@ parser.add_argument("--input", metavar= "i",  help = "Takes a txt file as input"
 
 args = parser.parse_args()
 
-
-input_file = open(args.input)
-print("Hello World! \b")
-for line in input_file: 
-    print(line.strip())
+if args.input == None:
+    print("Missing input file. \n Use --input to specify your input")
+else:    
+    input_file = open(args.input)
+    print("Hello World! \b")
+    for line in input_file: 
+        print(line.strip())
