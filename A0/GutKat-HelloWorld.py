@@ -9,4 +9,4 @@ with open(args.input, "r") as f:
     content = f.read()
 
 print("Hello World!")
-print(content)
+print(content, end="")
