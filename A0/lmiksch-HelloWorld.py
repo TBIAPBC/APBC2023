@@ -5,7 +5,7 @@ parser = argparse.ArgumentParser(
                     description = 'Takes a file as input and the returns hello world + the file content into the command line')
 
 
-parser.add_argument("--input", metavar= "i",  help = "Takes a txt file as input")
+parser.add_argument("input", metavar= "input",  help = "Takes a txt file as input")
 
 args = parser.parse_args()
 
