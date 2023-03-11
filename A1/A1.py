@@ -1,41 +1,43 @@
 text = open('WordCount-test1.in')
 
-ends = [',', '.', '!', '?', ']', '[']
-starts = [',', '.', '!', '?', ']', '[']
 
-all_words = set({})
-dict_words = {}
+def clean_word(string):
+    end = [',', '.', '!', '?', ']', '[']
+    start = [',', '.', '!', '?', ']', '[']
+    if string[-1] in end:
+        return string[:-1]
+    elif string[0] in start:
+        return string[1:]
+    else:
+        return string
+
+
+def count_word(string, all_word, word_s):
+    if string in all_word:
+        word_s[string] += 1
+    else:
+        word_s[string] = 1
+    all_word.add(string)
+    return all_word, word_s
+
+
+special_case = {'don\'t': ['do', 'not'], 'I\'m': ['I', 'am']}
+
+word_set = set({})
+word_counts = {}
 
 for row in text:
     words = row.split(' ')
     for word in words:
-        word = word.rstrip()
-        if word[-1] in ends:
-            print(word[:-1])
-            x = word[:-1]
-            if x in all_words:
-                dict_words[x] += 1
-            else:
-                dict_words[x] = 1
-            all_words.add(x)
-        elif word[0] in starts:
-            print(word[1:])
-            x = word[1:]
-            if x in all_words:
-                dict_words[x] += 1
-            else:
-                dict_words[x] = 1
-            all_words.add(x)
+        word = clean_word(word.rstrip())
+        if word in list(special_case.keys()):
+            cur_words = special_case[word]
+            for cur_w in cur_words:
+                count_word(cur_w, word_set, word_counts)
         else:
-            print(word)
-            if word in all_words:
-                dict_words[word] += 1
-            else:
-                dict_words[word] = 1
-            all_words.add(word)
-
-for key in dict_words.keys():
-    print(key, dict_words[key])
-print(f'{len(dict_words)}/{sum(dict_words.values())}')
+            count_word(word, word_set, word_counts)
 
 
+for key in word_counts.keys():
+    print(key, word_counts[key])
+print(f'{len(word_counts)}/{sum(word_counts.values())}')
