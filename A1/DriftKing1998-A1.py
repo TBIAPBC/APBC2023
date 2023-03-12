@@ -4,7 +4,7 @@ from functions import *
 
 # first element after the script will be taken as input
 argv = sys.argv
-file = argv[1]
+file = argv[-1]
 ignore_case = False
 print_list = False
 

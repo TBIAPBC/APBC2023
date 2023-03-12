@@ -10,7 +10,9 @@ def clean_word(word):
 
 
 def get_words(row):
-    row = row.replace('-', ' ')
+    x = ',.!?][\"\n\'-;: \r'
+    for element in x:
+        row = row.replace(element, ' ')
     words = row.split(' ')
     return words
 
@@ -37,6 +39,8 @@ def word_counter(text, ignore_case=False, print_list=False):
         words = get_words(row)
         for word in words:
             word = clean_word(word)
+            if word == '':
+                continue
 
             # CASE IGNORE
             if ignore_case:
@@ -61,3 +65,6 @@ def word_counter(text, ignore_case=False, print_list=False):
 
     print(f'{len(word_counts)}/{sum(word_counts.values())}')
     return word_counts
+
+
+
