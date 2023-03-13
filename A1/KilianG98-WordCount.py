@@ -3,6 +3,16 @@ import sys
 import string
 from tabulate import tabulate
 
+""""
+Program that reads in a text (file name given on the command line) and counts the total number of words and the number of different
+words. 
+
+* If option -I is given, case is ignored 
+
+* If option -l  is present, the program prints a list of words instead only counts.
+
+"""
+
 #function for sorting words from a dictionary based on their occurence and alphabetical order
 def sortWords(wordCounts):
 
@@ -58,36 +68,27 @@ if __name__=="__main__":
 
     wordCounts = {}
 
-    #create a string of punctuation signs that should be translated into spaces. remove ' from that string. (bc of words like don't)
+    #create a string of punctuation signs that should be translated into spaces. remove ' from that string (bc of words like don't).
     trans_signs = string.punctuation
     trans_signs = trans_signs.replace("'", "") 
     #translate all punctuation signs into spaces
     translator = str.maketrans(trans_signs, " " * len(trans_signs))
     content = content.translate(translator)
     #now the text can be split
-    cList = list(content.split())
-    
+    cList = content.split()
+
     #fill the dictionary with words -> counts
     for word in cList:
         if word in wordCounts.keys():
             wordCounts[word]+=1
         else:
             wordCounts[word] = 1
-    
+      
     #stop here, if -l was not passed as argument
     if not l_Flag:
         print (len(wordCounts), len(cList))
         sys.exit()
     
+    
     sol= sortWords(wordCounts)
-
-    
     print(tabulate(sol, headers=["words", "counts"]))
-    
-
-
-
-    
-
-        
-            
