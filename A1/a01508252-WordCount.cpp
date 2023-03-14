@@ -11,6 +11,7 @@
 #include <map>
 #include <algorithm>
 #include <vector>
+#include <cstring>
 
 using namespace std;
 
@@ -60,13 +61,12 @@ int main(int argc, char* argv[]) {
                 } else {
                     cleaned_word += c;
                 }
-            } else {
-                if (!cleaned_word.empty()) {
+            } else if (!cleaned_word.empty()) {
                     ++word_count[cleaned_word];
                     cleaned_word.clear();
                 }
+            
             }
-        }
         if (!cleaned_word.empty()) {
             ++word_count[cleaned_word];
         }
@@ -106,4 +106,3 @@ int main(int argc, char* argv[]) {
 
     return 0;
 }
-
