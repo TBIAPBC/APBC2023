@@ -86,7 +86,7 @@ if __name__=="__main__":
       
     #stop here, if -l was not passed as argument
     if not l_Flag:
-        print (len(wordCounts), len(cList))
+        print (len(wordCounts), "/",  len(cList))
         sys.exit()
     
     
