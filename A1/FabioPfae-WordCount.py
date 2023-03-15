@@ -13,8 +13,8 @@
 """
 
 import sys
+
 arg = sys.argv
-print(arg)
 letters_lower = "abcdefghijklmnopqrstuvwxyzäöü" + "ß"
 letters_upper = letters_lower.upper() + "ß"
 letters = letters_upper + letters_lower
@@ -28,10 +28,10 @@ flag = False
 if "-I" in arg:
     text = text.lower()
 
-for i in range(len(text)):
-    if text[i] in letters:
-        word = word+text[i]
-        flag = True
+for i in range(len(text)):   # if i reach a symbol after a letter the word is added to
+    if text[i] in letters:   # the array and variable word gets resetted. Also the flag switches
+        word = word+text[i]  # and prevents the loop from appending symbols to the array if i have
+        flag = True          # 1 or more symbols after another.
     else:
         if flag:
             words.append(word)
@@ -93,5 +93,4 @@ else:
     for i in arr:
         for j in i:
             print(j)
-
 
