@@ -2,59 +2,83 @@ import numpy as np
 import itertools
 
 
-def get_pair(pairs, a_list):
+def create_new_key(p, t1, t2):
+    new_key_elements = []
+    if p:
+        new_key_elements = p.split(',')
+    new_key_elements.append(str(t1 + t2))
+    new_key = ','.join(sorted(new_key_elements))
+    return new_key
+
+
+def get_possible_pairs(pairs, a_list, max_cost):
     new_pairs = {}
-    for p, rem_towns in pairs.items():
-        set_different = set({})
+    for pair_keys, data_left in pairs.items():
+        rem_towns = data_left[0]
+        rem_cost = data_left[1]
 
-        for i, town in enumerate(rem_towns):
-            for j, partner in enumerate(rem_towns):
+        unique_new_tuples = set({})
+
+        for i, town_1 in enumerate(rem_towns):
+            for j, town_2 in enumerate(rem_towns):
                 if i != j:
-                    remaining = rem_towns.copy()
-                    remaining.remove(town)
-                    remaining.remove(partner)
-                    key = str(sorted([town, partner]))
-                    if key not in set_different:
-                        set_different.add(key)
-                        #new_cost = rem_towns[1] + a_list[town][partner]
-                        new_pairs[f'{p}{town}{partner},'] = remaining
+                    new_rem_towns = rem_towns.copy()
+                    new_rem_towns.remove(town_1)
+                    new_rem_towns.remove(town_2)
 
-    if not list(pairs.values())[0]:
-        pairs = sorted(set(pairs.keys()))
+                    new_town_tuple = str(sorted([town_1, town_2]))
+                    new_cost = rem_cost + a_list[town_1][town_2]
+
+                    if new_cost <= max_cost and new_town_tuple not in unique_new_tuples:
+                        unique_new_tuples.add(new_town_tuple)
+                        new_key = create_new_key(pair_keys, town_1, town_2)
+                        new_pairs[f'{new_key}'] = (new_rem_towns, new_cost)
+
+    # If the remaining set of towns is empty, this means all solutions have been found
+    if not list(pairs.values())[0][0]:
+        n_pairs = sorted(set(pairs.keys()))
+        minimum = (list(pairs.values())[1])
+        print(minimum)
         result = []
-        for p in pairs:
-            result.append(tuple(p[:-1].split(',')))
+        for pair_keys in n_pairs:
+            result.append(tuple(pair_keys.split(',')))
         return result
 
-    return get_pair(new_pairs, a_list)
+    # If there is no potential solution at this point we also cannot continue
+    if not new_pairs.keys():
+        return f'No solution found for the current maximal cost {max_cost}!'
+
+    # If no ending statement is true the recursion goes on
+    # print(new_pairs)
+    return get_possible_pairs(new_pairs, a_list, max_cost)
 
 
-def get_possibilities(a_list):
+def get_possibilities(a_list, m_cost):
     all_towns = list(a_list.keys())
-    #all_towns = [all_towns, 0]
+    all_towns = (all_towns, 0)
     tmp = {'': all_towns}
-    pairs = get_pair(tmp, a_list)
+    pairs = get_possible_pairs(tmp, a_list, m_cost)
     return pairs
 
 
 ad_list = {}
 
 with open('Administration-test1.in', 'r') as file:
-    tmp = {}
+    temp = {}
     max_money = file.readline().strip().split()[1]
     for j, node in enumerate(file.readline().strip().split()):
-        tmp[j] = node
+        temp[j] = node
     for i, row in enumerate(file):
-        values = row.strip().replace('-','0').split()
+        values = row.strip().replace('-', '0').split()
         to = {}
         for x, v in enumerate(values):
-            if tmp[i] != tmp[x]:
-                to[tmp[x]] = int(v)
-        ad_list[tmp[i]] = to
+            if temp[i] != temp[x]:
+                to[temp[x]] = int(v)
+        ad_list[temp[i]] = to
+    
+result = get_possibilities(ad_list, 9)
 
+#print(f'The were {len(result)} solutions:\n{result}')
 
-print(get_possibilities(ad_list))
-exit()
-
-for k, v in ad_list.items():
-    print(k, v)
+for res in result:
+    print(' '.join(res))
