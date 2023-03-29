@@ -1,4 +1,7 @@
 import argparse
+#import time
+import sys
+
 
 def evaluate(curr_cities,costs):
     """Takes the current selection of cities which will be put together and calculates score
@@ -8,13 +11,8 @@ def evaluate(curr_cities,costs):
         curr_cities(list): List of cities as tuples 
         costs(dict): dictionary of costs 
     """
-    cost = 0
-    
-    for x in curr_cities:
-        
-        cost += costs[x]
 
-    return cost
+    return sum(costs[x] for x in curr_cities)
 
 
 def extend_admin(curr_cities, costs,cost_lim):
@@ -27,13 +25,13 @@ def extend_admin(curr_cities, costs,cost_lim):
     """
     
     new_admins = []
-    used_cities = [ x for tuple in curr_cities for x in tuple]
+    used_cities = set( x for tuple in curr_cities for x in tuple)
     
     for tuple in costs.keys():
         ext = []
         ext.append(curr_cities)
 
-
+        
         flat_ext = []
         for sublist in ext:
             if isinstance(sublist,list):
@@ -50,7 +48,7 @@ def extend_admin(curr_cities, costs,cost_lim):
             if evaluate(ext,costs) <= int(cost_lim):
                 new_admins.append(ext)
 
-   
+    
     return new_admins
 
 
@@ -79,8 +77,9 @@ def admin(costs,cost_lim):
         for x in admin_cities:
             new_admins.extend(extend_admin(x,costs,cost_lim))
         
-        admin_cities = new_admins
-
+        
+        admin_cities = filter_results(new_admins)
+        #print(admin_cities)
     return admin_cities
 
 
@@ -90,16 +89,15 @@ def filter_results(results):
     """
     final_results = []
     for sub_lst in results:
-        sub_set = set(sub_lst)
-        if sub_set not in [set(x) for x in final_results]:
+        sub_lst.sort()  
+        if sub_lst not in final_results:
             final_results.append(sub_lst)
     
-    return(final_results)
+    return final_results
 
+if __name__ == "__main__":
 
-if __name__ == __name__:
-
-    
+    #start = time.time()
     parser = argparse.ArgumentParser(
                         prog='Administration',
                         description='',
@@ -128,7 +126,11 @@ if __name__ == __name__:
           
             if input[row][column] != "-" and str(input[0][column] + input[0][row - 1]) not in costs.keys(): # do not include city tuples with the same city and allready existing city pairs 
                 costs[str(input[0][row - 1] + input[0][column])] = int(input[row][column])
-
+                
+    #exit if there cant be a feasable solution
+    if min(costs.values()) > int(cost_lim):
+        print("Cost Limit is too high")
+        sys.exit()
     #Applying algorithm         
     final = admin(costs,cost_lim)
     filtered_results = filter_results(final)
@@ -142,16 +144,20 @@ if __name__ == __name__:
         print("Best scoring Solution:",min(score_dict.values()))
             
     else:
-        with open("lmiksch-Adminstration.out","w") as out:
+        output = args.input[:-2] + "out"
+        with open(output,"w") as out:
             for admin in filtered_results:
                 print(" ".join(admin))
+                """ If an extra output file is required
                 for city_tuple in admin:
                     out.write(city_tuple)
                     out.write(" ")
                 out.write("\n")
+                """
 
 
-    
+    #end = time.time()
+    #print(end - start)
 
 
 
