@@ -31,8 +31,8 @@ class Tree:
         :param capitals: List of capitals
         :param optimize: whether result should be optimized
         """
-        self.root = Node(overall_cost=0, pairing=None, matrix=np.copy(matrix),
-                         available_capitals=capitals)
+        self.root = Node(parent=None, overall_cost=0, pairing=None, matrix=np.copy(matrix),
+                         available_capitals=capitals, sequence=[])
         self.bound = [bound]
         self.matrix = matrix
         self.no_capitals = len(capitals)
@@ -47,38 +47,14 @@ class Tree:
         """
         Builds up the tree by branching away from the root and collecting the pairings
         """
-        self.root.branch(self.bound, self.optimize)
-        self.pairings = self.get_pairings()
-
-    def get_pairings(self):
-        """
-        :return: successfull pairings
-        """
-        all_pairings = list()
-        self.traverse_nodes(self.root, all_pairings)
-        return all_pairings
-
-    def traverse_nodes(self, node, all_pairings, pairings=None):
-        """
-        Uses DFS to traverse to the leaves of the tree and collect all the pairings that contain all the capitals
-        """
-        if pairings is None:
-            pairings = list()
-        else:
-            pairings.append(node.pairing)
-        if not node.children:
-            if len(pairings) == self.no_capitals / 2:
-                all_pairings.append(pairings)
-            return
-        for child in node.children:
-            self.traverse_nodes(child, all_pairings, list(pairings))
+        self.root.branch(self.bound, self.optimize, self.pairings)
 
 
 class Node:
     """
     The class Node represents a single pairing in the tree
     """
-    def __init__(self, overall_cost, pairing, matrix, available_capitals):
+    def __init__(self, parent, overall_cost, pairing, matrix, available_capitals, sequence):
         """
 
         :param overall_cost: cost of current plus previous pairings
@@ -86,13 +62,15 @@ class Node:
         :param matrix: cost matrix without already chosen pairings
         :param available_capitals: capitals that are still available
         """
+        self.parent = parent
         self.pairing = pairing
         self.children = list()
         self.matrix = matrix
         self.overall_cost = overall_cost
         self.available_capitals = available_capitals
+        self.sequence = sequence
 
-    def branch(self, bound, optimize):
+    def branch(self, bound, optimize, pairings):
         """
         Chooses feasible branches away from the current node
         :param bound: should bot be exceeded by overall cost
@@ -100,13 +78,14 @@ class Node:
         :return: None
         """
         if self.matrix.shape == (0, 0):
+            pairings.append(self.sequence)
             if optimize is True and self.overall_cost < bound[0]:
                 bound[0] = self.overall_cost
             return
         row = self.matrix[0, :]
-        self.traverse_row(row, bound, optimize)
+        self.traverse_row(row, bound, optimize, pairings)
 
-    def traverse_row(self, row, bound, optimize):
+    def traverse_row(self, row, bound, optimize, pairings):
         """
         Goes through values in current row, if a pairing is feasible it will be added as a child to the current node
         and new branches will be built from it (DFS)
@@ -123,9 +102,10 @@ class Node:
                 continue
             pairing = [self.available_capitals[0], self.available_capitals[column]]
             updated_capitals = self.update_capitals(column)
-            child = Node(cost, pairing, updated_matrix, list(updated_capitals))
+            sequence = [*self.sequence, pairing]
+            child = Node(self, cost, pairing, updated_matrix, list(updated_capitals), sequence)
             self.children.append(child)
-            child.branch(bound, optimize)
+            child.branch(bound, optimize, pairings)
 
     def update_matrix(self, column):
         """
