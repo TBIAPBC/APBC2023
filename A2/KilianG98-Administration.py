@@ -36,7 +36,8 @@ def CityInPath(city, path):
 
 # Recursive Branch and Bound. 
 # Receives the cost-matrix as df, the number of cities,
-# a list of paths that initially is empty and contains the solutions in the end and a set of explored paths.
+# a list of paths that initially is empty and contains the solutions in the end and a set of explored paths
+#i also added a list that contains unexplored cities, so I don't have to loop thruogh all cities everytime.
 def BAB(df, numOfCities, listOfPaths, exploredPaths, cities):
 
     #look at the latest path
