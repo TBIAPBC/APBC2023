@@ -96,6 +96,6 @@ Hints:
 
   * Implement a 2D DP matrix that stores the optimal path weight from the start to each crossing (or corner). The final result is computed at the end corner. The path is obtained by trace back.
 
-** This assignment is due on 30 March 2023 10AM **
+** This assignment is due on 20 April 2023 10AM **
 
 Happy hacking!
