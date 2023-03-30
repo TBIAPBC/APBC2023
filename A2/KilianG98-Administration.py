@@ -22,7 +22,7 @@ def Score(path, df):
 
 #function to check if a given path is complete
 def IsComplete(path, numOfCities):
-    if len(path) == numOfCities/2:
+    if len(path) == numOfCities//2:
         return True
     return False
 
@@ -37,7 +37,7 @@ def CityInPath(city, path):
 # Recursive Branch and Bound. 
 # Receives the cost-matrix as df, the number of cities,
 # a list of paths that initially is empty and contains the solutions in the end and a set of explored paths.
-def BAB(df, numOfCities, listOfPaths, exploredPaths):
+def BAB(df, numOfCities, listOfPaths, exploredPaths, cities):
 
     #look at the latest path
     path = listOfPaths[-1]
@@ -56,18 +56,21 @@ def BAB(df, numOfCities, listOfPaths, exploredPaths):
     #remove the path, later add the updated path again
     listOfPaths.remove(path)
     #add new path to the list and call BAB again
-    for city in df.columns:
+    for city in cities:
         if not CityInPath(city, path):
-            for city2 in df.columns:
+            for city2 in cities:
                 if city2 != city and not CityInPath(city2, path):
                     newP = path.copy()
                     newP.append([city,  city2])
                     newPSet = frozenset(map(frozenset, newP))
                     #add the path only if its not already explored
                     if newPSet not in exploredPaths:
-                        exploredPaths.append(newPSet)
-                        listOfPaths.append(newP.copy())
-                        BAB(df,numOfCities, listOfPaths, exploredPaths)
+                        remainingCities = cities.copy()
+                        remainingCities.remove(city2)
+                        remainingCities.remove(city)
+                        exploredPaths.add(newPSet)
+                        listOfPaths.append(newP)
+                        BAB(df,numOfCities, listOfPaths, exploredPaths, remainingCities)
 
     return listOfPaths
 
@@ -98,9 +101,9 @@ if __name__=="__main__":
     upper = int(vars[1])
     #convert matrix into pandas dataframe
     df = pd.DataFrame(matrix, columns=header, index=header)
-
+    cities = header
     #get the solution
-    paths = BAB(df, int(vars[0]), [[]], [])
+    paths = BAB(df, int(vars[0]), [[]], set(), cities)
 
     #print solution
     try:
