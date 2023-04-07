@@ -1,52 +1,65 @@
 import argparse
 
 def input_parser(input_file,diag = False):
+    """Parses the input file. Ignores lines starting with #
+    
+    Args: 
+        input_file(str): Name of the input file
+        diag(boolean): Flag if command -d has been added in the command line
+
+    Returns:
+        A matrix corresponding to the weighted directions
+    
+    """
+
     #parsing input creates for every direction a matrix
     down_block = []
     right_block = []
     diag_block = []
-    input_type = 0
-    new_block = True
-    with open(input_file) as input: 
+    
+
+
+    with open(args.input) as input: 
         lines = input.readlines()
         raw_input = []
-
         for line in lines:
-            line = line.strip()
-            if len(line) == 0:
-                continue
-
-
-            if line.startswith("#") and new_block == False:
-                continue
-                
-            if not line.startswith("#") and input_type == 1:
-                down_block.append(line.strip().split())
-                new_block = True
-
-            if not line.startswith("#") and input_type == 2:
-                right_block.append(line.strip().split())    
-                new_block = True
-
-            if diag == True and not line.startswith("#") and input_type == 3:
-                diag_block.append(line.strip().split())
-                new_block = True
-            
-            if line.startswith("#") and new_block == True:
-                input_type += 1 
-                new_block = False
+        
+            if line[0] != "#" and len(line) != 0: 
+                raw_input.append(line.strip().split())
     
+    raw_input = [sublist for sublist in raw_input if sublist]
+
+    i = 0
+    x = 0
+    #Each Direction is indicated by x. If it recognizes that the directions matrix is filled it increases x. 
+    #There is probably a better solution to this
+    while x != 3:
+        if x == 0:
+            if len(raw_input[i + 1]) < len(raw_input[i]):
+                x += 1 
+            down_block.append(raw_input[i])
+            i += 1
+          
+        elif x == 1:
+            right_block.append(raw_input[i])
+            i += 1
+            if len(right_block) == len(down_block)+1:
+                x += 1 
+        elif x == 2 and diag == False:
+            break
+        elif diag == True and x == 2:
+            diag_block.append(raw_input[i])
+            i += 1 
+
+         
+        if i == len(raw_input):
+            break    
+   
     return(down_block,right_block,diag_block)
 
-
-
-
-
-
-
-
-
 def init_matrix(down_block,right_block):
+    """Creates a matrix based on the grid size derived from the input and fills the first row and column based on the weights.
+    """
 
     grid_size = (len(down_block[0]),len(right_block))
 
@@ -69,7 +82,7 @@ def init_matrix(down_block,right_block):
 
 
 def fill_matrix(down_block,right_block,diag_block, matrix,dir_matrix):
-    """Fill the matrix based on the rules in the readme and saves the scores in a matrix. 
+    """Fill the matrix based on the rules in the readme and saves the scores in a matrix. It also saves the paths in each cell. 
 
         Args: 
             down_block(list): List from input
@@ -79,19 +92,17 @@ def fill_matrix(down_block,right_block,diag_block, matrix,dir_matrix):
             dir_matrix(list): Saves the direction from which the highest score comes from 
 
         Returns:
-            matrix(list): List of lists containing the max score in each cell 
+            matrix(list): List of lists containing the max score in each cell
+            dir_matrix(list): List where each cell entry has the optimal path to arrive at this cell with the highest score.  
 
-        Todo:
-            Write diag rule 
+        
     """
-    grid_size = (len(down_block[0]),len(right_block))
+    grid_size = (len(right_block),len(down_block[0]))
     #fill matrix row by row 
 
     for row in range(1,grid_size[0]):
         
         for column in range(1,grid_size[1]):
-            
-           # need to 
             diag = 0
             right = matrix[row][column-1] + float(right_block[row][column-1])
             down = matrix[row-1][column] + float(down_block[row-1][column])
@@ -100,15 +111,13 @@ def fill_matrix(down_block,right_block,diag_block, matrix,dir_matrix):
                 diag = matrix[row-1][column-1] + float(diag_block[row-1][column-1])
                 
 
-
-            #print(max(right,down))
             if right > down and right > diag: 
                 matrix[row][column] = right
                 dir_matrix[row][column] = dir_matrix[row][column-1] + "E"
             elif diag > right and diag > down:
                 matrix[row][column] = diag
                 dir_matrix[row][column] = dir_matrix[row-1][column-1] + "D"
-            elif down > right and down > diag: 
+            elif down >= right and down >= diag: 
                 matrix[row][column] = down 
                 dir_matrix[row][column] = dir_matrix[row-1][column] + "S"
             elif down == right or down == diag:
@@ -116,15 +125,57 @@ def fill_matrix(down_block,right_block,diag_block, matrix,dir_matrix):
                 dir_matrix[row][column] = dir_matrix[row-1][column] + "S"
     return(matrix,dir_matrix)
 
-'''
-def traceback(matrix): 
-    path = []
 
-    for row in range(grid_size[0],0,-1):
-        for column in range(grid_size[1],0,-1):
-            down = matrix[row - 1][column] + float(down_block[row-1][column])
-            right =  matrix[row][column-1] + float(right_block[row][column-1])
-'''
+def traceback(matrix,row,column,path,down_block,right_block,diag_block): 
+    """Traces back the optimal path and returns the path. Tried to also implement a traceback function. This does not work with HVD2 (too many recursions)
+    """
+
+    if row == 0 and column == 0:
+        path.reverse()
+        return path  
+    if row == 0:
+        while column != 0:
+            path.append("E")
+            column += -1
+        path.reverse()
+        return path
+    
+    if column == 0:
+        while row != 0:
+            path.append("S")
+            row += 1
+        path.reverse()
+        return path
+
+          
+
+    diag = 0
+    down = matrix[row - 1][column] + float(down_block[row-1][column])
+    right =  matrix[row][column-1] + float(right_block[row][column-1])
+    
+    if len(diag_block) != 0: 
+        diag = matrix[row-1][column-1] + float(diag_block[row-1][column-1])
+
+    if right > down and right > diag:         
+        path.append("E")
+        column += -1
+
+    elif diag > right and diag > down:
+        path.append("D")
+        row += -1
+        column += -1
+    elif down >= right and down >= diag: 
+        path.append("S")
+        row += -1
+    elif down == right or down == diag:
+        path.append("S") 
+        row += -1
+    
+    return traceback(matrix,row,column,path,down_block,right_block,diag_block)
+
+
+
+                
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
@@ -137,8 +188,9 @@ if __name__ == "__main__":
     parser.add_argument("-d","--diagonal", help="Allows input files with diagonals",action="store_true")
 
     args = parser.parse_args()
-
+    
     down_block,right_block, diag_block = input_parser(args.input,args.diagonal)
+    grid_size = (len(right_block),len(down_block[0]))
 
     matrix, dir_matrix = init_matrix(down_block,right_block)
 
@@ -147,8 +199,12 @@ if __name__ == "__main__":
     print(round(matrix[-1][-1],4))
 
     if args.track:
+        path = []
         print(dir_matrix[-1][-1])
-    
+
+        #uncomment to also use the traceback function does not work with HVD2 since it hits the recursion limit
+        #final_path = traceback(matrix,grid_size[0]-1,grid_size[1]-1,path,down_block,right_block,diag_block)
+        #print("".join(final_path))
 
 
 
