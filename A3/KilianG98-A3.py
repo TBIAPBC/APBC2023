@@ -105,7 +105,8 @@ def main():
                         path = 'D' + path
                         i -= 1
                         j -= 1
-                elif costMatrix[i-1][j] + vWeights[i-1][j] == costMatrix[i][j]:
+                        pass
+                if costMatrix[i-1][j] + vWeights[i-1][j] == costMatrix[i][j]:
                     path = 'S' + path
                     i -= 1
                 else:
