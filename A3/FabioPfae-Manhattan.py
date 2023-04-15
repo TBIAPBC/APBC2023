@@ -1,4 +1,8 @@
 """
+Notes after finishing:
+- Constructing weighted edges by a dictionary of tuple of tuples is not necessary, rather use a scoring matrix next time.
+- Backtracking: Dont backtrack from scratch after the DP has finished, rather create a backtrack matrix that is generated during the DP matrix run
+
 ___________________________________ DYNAMIC PROGRAMMING ______________________________________
 how the algorithms works:
 initiating the source (node in left top corner) with 0 I fill the other node_weights as follows:
