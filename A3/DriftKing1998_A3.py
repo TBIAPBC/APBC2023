@@ -27,7 +27,7 @@ try:
     print(int(arr[-1][-1]))                                         # last entry in 'arr' is the best solution
     if path_arg:
         path = backtrace(arr, north_south, west_east)
-        print(path)                                                 # this is the best path ('E' at multiple solutions)
+        print(path)                                                 # this is the best path ('S' at multiple solutions)
 
 except ValueError as v:
 
@@ -39,7 +39,7 @@ except ValueError as v:
         print(round(arr[-1][-1], 2))                                # last entry in 'arr' is the best solution
         if path_arg:
             path = backtrace_hard(arr, north_south, west_east, diag)
-            print(path)                                             # this is the best path ('E' at multiple solutions)
+            print(path)                                             # this is the best path ('S' at multiple solutions)
 
     except Exception as e:
 
