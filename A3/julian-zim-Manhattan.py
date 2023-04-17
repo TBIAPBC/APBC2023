@@ -1,15 +1,15 @@
 import sys
-import math
 
 if __name__ == '__main__':
 
-    # parsing
-    d = False
-    t = False
+    # command line arguments
     filename = ''
+    t = False
+    d = False
+    actual_d = False
 
     if len(sys.argv) < 2:
-        print('Usage: ' + sys.argv[0] + ' <filename> [-d] [-t]')
+        print('Usage: \"' + sys.argv[0] + ' <filename> [-d] [-t]\"')
         sys.exit()
 
     for argument in sys.argv[1:]:
@@ -32,48 +32,87 @@ if __name__ == '__main__':
     horizontals = list()
     diagonals = list()
 
-    width = -math.inf
-    height = -math.inf
+    width = 0
+    height = 0
 
-    # skip to first verticals line
     line = file.readline()
-    while line:
-        if line != '\n' and line[0] != '#':
-            width = len(line.split())
-            break
+    while line:  # seek to first verticals line and determine width
+        if line[0] != '#':
+            data = line.split()
+            if data:
+                width = len(data)
+                height += 1
+                break
         line = file.readline()
 
-    # read in verticals lines
-    while line:
-        if line != '\n' and line[0] != '#':
-            if len(line.split()) < width:
-                break
-            else:
+    while line:  # read in verticals lines and determine height
+        if line[0] != '#':
+            data = line.split()
+            if data:
+                if len(data) > width or len(data) < width - 1:
+                    raise Exception('Input matrix for vertical edges has wrong format (not all rows are the same length).')
+                if len(data) == width - 1:
+                    break
+                height += 1
                 verticals.append(list())
-                for value in line.split():
+                for value in data:
+                    temp = value.split('.')
+                    if len(temp) > 1 and len(temp[1]) > 2:
+                        raise Exception('Only two decimals per data point are allowed.')
                     verticals[-1].append(float(value))
         line = file.readline()
 
-    # read in horizontals lines
     counter = 0
-    while counter < width and line:
-        if line != '\n' and line[0] != '#':
-            horizontals.append(list())
-            for value in line.split():
-                horizontals[-1].append(float(value))
-            counter += 1
+    while counter < height:  # read in exactly height many horizontals lines
+        if not line:
+            raise Exception('Horizontal and vertical input matrix dimensions don\'t match.')
+        if line[0] != '#':
+            data = line.split()
+            if data:
+                if len(data) != width - 1:
+                    raise Exception('Horizontal and vertical input matrix dimensions don\'t match.')
+                horizontals.append(list())
+                for value in data:
+                    temp = value.split('.')
+                    if len(temp) > 1 and len(temp[1]) > 2:
+                        raise Exception('Only two decimals per data point are allowed.')
+                    horizontals[-1].append(float(value))
+                counter += 1
         line = file.readline()
-    height = counter
 
     if d:
-        d_counter = 0
-        while d_counter < height - 1 and line:
-            if line != '\n' and line[0] != '#':
-                diagonals.append(list())
-                for value in line.split():
-                    diagonals[-1].append(float(value))
-                d_counter += 1
+        counter = 0  # read in exactly height - 1 many diagonals lines
+        while line and counter < height - 1:
+            if line[0] != '#':
+                data = line.split()
+                if data:
+                    if len(data) != width - 1:
+                        raise Exception('Diagonal input matrix dimension doesn\'t match the horizontal and vertical ones.')
+                    diagonals.append(list())
+                    for value in data:
+                        temp = value.split('.')
+                        if len(temp) > 1 and len(temp[1]) > 2:
+                            raise Exception('Only two decimals per data point are allowed.')
+                        diagonals[-1].append(float(value))
+                    counter += 1
             line = file.readline()
+        actual_d = counter > 0
+        if not actual_d:
+            print('Warning: Trying to process diagonal edge information while file doesn\'t contain any.')
+        elif counter != height - 1:
+            raise Exception('Diagonal input matrix dimension doesn\'t match the horizontal and vertical ones.')
+
+    garbage = False  # check for unnessecary content
+    while line:
+        if line[0] != '#' and line.split():
+            garbage = True
+            break
+        line = file.readline()
+    if garbage:
+        print('Warning: More lines following after matrices already fully specified. '
+              + ('Maybe try the -d flag?' if not d else ''))
+
+    file.close()
 
     # algorithm
     score_matrix = [[0 for _ in range(width)] for _ in range(height)]
@@ -96,7 +135,7 @@ if __name__ == '__main__':
             left_score = score_matrix[i][j - 1] + horizontals[i][j - 1]
             diag_score = -1
             best_score = -1
-            if d:
+            if d and actual_d:
                 diag_score = score_matrix[i - 1][j - 1] + diagonals[i - 1][j - 1]
                 best_score = max(top_score, left_score, diag_score)
             else:
@@ -112,7 +151,14 @@ if __name__ == '__main__':
             else:
                 raise Exception('what')
 
-    print("{:.2f}".format(score_matrix[-1][-1]))
+    # output
+    result = -1
+    try:
+        result = score_matrix[-1][-1]
+    except IndexError:
+        pass
+    print("{:.2f}".format(result) if result != int(result) else str(int(result)))
+
     if t:
         path = list()
         index = [len(score_matrix) - 1, len(score_matrix[len(score_matrix) - 1]) - 1]
