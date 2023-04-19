@@ -61,11 +61,12 @@ def build_solutions(solutions, backtracing, matrix_down, matrix_right, matrix_di
                 diagonal = solutions[i-1, j-1] + matrix_diag[i-1, j-1]
             solutions[i, j] = max(down, right, diagonal)
             if solutions[i, j] == down:
-                backtracing[i, j] = "S"
+                path = backtracing[i-1][j] + "S"
             elif solutions[i, j] == right:
-                backtracing[i, j] = "E"
+                path = backtracing[i][j-1] + "E"
             elif solutions[i, j] == diagonal:
-                backtracing[i, j] = "D"
+                path = backtracing[i-1][j-1] + "D"
+            backtracing[i][j] = path
 
 
 def initialize_matrix(solutions, backtracing, matrix_down, matrix_right):
@@ -78,31 +79,13 @@ def initialize_matrix(solutions, backtracing, matrix_down, matrix_right):
     """
     for i in range(1, solutions.shape[1]):
         solutions[0, i] = solutions[0, i-1] + matrix_right[0, i-1]
-        backtracing[0, i] = "E"
+        backtracing[0][i] = backtracing[0][i-1] + "E"
     for i in range(1, solutions.shape[0]):
         solutions[i, 0] = solutions[i-1, 0] + matrix_down[i-1, 0]
-        backtracing[i, 0] = "S"
+        backtracing[i][0] = backtracing[i-1][0] + "S"
 
 
-def traceback(backtracing, i, j):
-    """
-    recursively builds up the path travelled to reach the best solution
-    :param backtracing: matrix with memmorized directions
-    :param i: row index
-    :param j: column index
-    :return: string of directions
-    """
-    if i == 0 and j == 0:
-        return ""
-    if backtracing[i, j] == "S":
-        return traceback(backtracing, i-1, j) + backtracing[i, j]
-    if backtracing[i, j] == "E":
-        return traceback(backtracing, i, j-1) + backtracing[i, j]
-    if backtracing[i, j] == "D":
-        return traceback(backtracing, i-1, j-1) + backtracing[i, j]
-
-
-def manhattan_solver(matrix_down, matrix_right, matrix_diag, diag):
+def manhattan_solver(matrix_down, matrix_right, matrix_diag, diag, t):
     """
     solves the Manhattan Tourist Problem with a bottom up Dynamic Programming approach
     :param matrix_down: weight matrix
@@ -111,7 +94,7 @@ def manhattan_solver(matrix_down, matrix_right, matrix_diag, diag):
     :param diag: whether to consider diagonal directions
     """
     solutions = np.zeros((matrix_right.shape[0], matrix_down.shape[1]))
-    backtracing = np.empty((matrix_right.shape[0], matrix_down.shape[1]), dtype=str)
+    backtracing = [["" for columns in range(matrix_down.shape[1])] for rows in range(matrix_right.shape[0])]
     build_solutions(solutions, backtracing, matrix_down, matrix_right, matrix_diag, diag)
     row_ix = solutions.shape[0] - 1
     column_ix = solutions.shape[1] - 1
@@ -120,8 +103,8 @@ def manhattan_solver(matrix_down, matrix_right, matrix_diag, diag):
         print(int(optimum))
     else:
         print("%.2f" % optimum)
-    if args.t:
-        print(traceback(backtracing, row_ix, column_ix))
+    if t:
+        print(backtracing[row_ix][column_ix])
 
 
 if __name__ == "__main__":
@@ -131,4 +114,4 @@ if __name__ == "__main__":
     parser.add_argument("-t", action="store_true", help="list best path")
     args = parser.parse_args()
     matrix_down, matrix_right, matrix_diag = read_weights(args.path, diag=args.d)
-    manhattan_solver(matrix_down, matrix_right, matrix_diag, diag=args.d)
+    manhattan_solver(matrix_down, matrix_right, matrix_diag, diag=args.d, t=args.t)
