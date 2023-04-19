@@ -97,10 +97,14 @@ def find_path(verticals, horizontals, t = False, diagonals = False):
             if t:
                 backtrack = [key for key, value in scores.items() if value == max(scores.values())]
                 if len(backtrack) == 1:
+                    # if we only have one max score, we save this direction
                     backtracking[i][j] = backtrack[0]
-                else:
-                    # if we have max scores, we go south
+                elif "S" in backtrack:
+                    # if we have more max scores and south is included, we prefer going south
                     backtracking[i][j] = "S"
+                else:
+                    # if we have max scores which are either "E" or "D", we prefer going East
+                    backtracking[i][j] = "E"
 
     # after going over the grid, the score is saved in the right, lower corner
     end_score = matrix[-1][-1]
