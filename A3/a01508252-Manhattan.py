@@ -3,7 +3,7 @@
 import argparse
 import numpy as np
 
-def read_file(filename):
+def read_file(filename):    # works fine
     """
     Read the input file and store the weight data in a list of lists.
 
@@ -24,7 +24,7 @@ def read_file(filename):
 
     return data
 
-def process_data(data, diagonal):
+def process_data(data, diagonal):   #works fine
     """
     Split the data into horizontal, vertical, and optional diagonal edge weights.
 
@@ -76,37 +76,53 @@ def find_path(horizontal, vertical, diagonal):
     Returns:
         tuple: A tuple containing the weight of the longest path and the backtracking matrix for path tracing.
     """
+    # Initialise the dimensions of the grid
+    #print(horizontal)
+    #print(vertical)
     n = len(horizontal) + 1
-    dp = np.zeros((n, n))
-    backtracking = np.empty((n, n), dtype=str)
+    #print(n)
+    m = len(vertical[0]) + 1
+    #print(m)
+    # Create the dynamic programming table to store path weights
+    dp = np.zeros((n, m))
+    # Create the backtracking table to store the directions of the longest path
+    backtracking = np.empty((n, m), dtype=str)
 
+    # Initialise the first column of the dynamic programming table
     for i in range(1, n):
-        dp[i, 0] = dp[i - 1, 0] + vertical[i - 1, 0]
+        dp[i, 0] = dp[i - 1, 0] + horizontal[i - 1, 0]
         backtracking[i, 0] = "S"
 
-    for j in range(1, n):
-        dp[0, j] = dp[0, j - 1] + horizontal[0, j - 1]
+    # Initialise the first row of the dynamic programming table
+    for j in range(1, m):
+        dp[0, j] = dp[0, j - 1] + vertical[0, j - 1]
         backtracking[0, j] = "E"
 
+    # Fill in the dynamic programming table and the backtracking table
     for i in range(1, n):
-        for j in range(1, n):
-            east = dp[i, j - 1] + horizontal[i - 1, j - 1]
-            south = dp[i - 1, j] + vertical[i - 1, j - 1]
-
-            if diagonal and i > 1 and j > 1:
-                diag = dp[i - 1, j - 1] + diagonal[i - 2, j - 2]
+        for j in range(1, m):
+            east = dp[i, j - 1] + vertical[i, j - 1]
+            south = dp[i - 1, j] + horizontal[i - 1, j]
+            # If the diagonal option is enabled, consider diagonal moves as well
+            if diagonal is not None and i > 1 and j > 1:
+                diag = dp[i - 1, j - 1] + diagonal[i - 1, j - 1]
                 max_value, direction = max((east, "E"), (south, "S"), (diag, "D"))
             else:
                 max_value, direction = max((east, "E"), (south, "S"))
 
-            dp[i, j] = max_value
-            backtracking[i, j] = direction
+            dp[i, j] = max_value       
+            #dp[i, j] = east
+            backtracking[i, j] = direction 
 
-    best_path_weight = dp[i, j]
+
+    # Get the weight of the longest path
+    best_path_weight = dp[-1, -1]
+
+    # Convert the weight to an integer if it is a whole number
     if best_path_weight.is_integer():
         best_path_weight = int(best_path_weight)
 
-    return best_path_weight, backtracking
+    return best_path_weight, backtracking, dp
 
 
 def trace_path(backtracking):
@@ -150,11 +166,12 @@ def main():
     #print(vertical)
     #print(diagonal)
 
-    weight, backtracking = find_path(horizontal, vertical, diagonal)
+    weight, backtracking, dp = find_path(horizontal, vertical, diagonal)
 
     # print the weight of the longest path
     print(weight)
-    print(backtracking)
+    #print(dp)
+    #print(backtracking)
     
     # if trace flag is set, print the best path
     if args.trace:
