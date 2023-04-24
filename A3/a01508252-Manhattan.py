@@ -2,8 +2,9 @@
 
 import argparse
 import numpy as np
+import os
 
-def read_file(filename):    # works fine
+def read_file(filename):
     """
     Read the input file and store the weight data in a list of lists.
 
@@ -24,7 +25,7 @@ def read_file(filename):    # works fine
 
     return data
 
-def process_data(data, diagonal):   #works fine
+def process_data(data, diagonal):
     """
     Split the data into horizontal, vertical, and optional diagonal edge weights.
 
@@ -104,7 +105,7 @@ def find_path(horizontal, vertical, diagonal):
             east = dp[i, j - 1] + vertical[i, j - 1]
             south = dp[i - 1, j] + horizontal[i - 1, j]
             # If the diagonal option is enabled, consider diagonal moves as well
-            if diagonal is not None and i > 1 and j > 1:
+            if diagonal is not None:
                 diag = dp[i - 1, j - 1] + diagonal[i - 1, j - 1]
                 max_value, direction = max((east, "E"), (south, "S"), (diag, "D"))
             else:
@@ -121,6 +122,8 @@ def find_path(horizontal, vertical, diagonal):
     # Convert the weight to an integer if it is a whole number
     if best_path_weight.is_integer():
         best_path_weight = int(best_path_weight)
+    else: # otherwise, round it to two decimal places
+        best_path_weight = f"{best_path_weight:.2f}" if isinstance(best_path_weight, float) else str(best_path_weight)
 
     return best_path_weight, backtracking, dp
 
@@ -135,9 +138,11 @@ def trace_path(backtracking):
     Returns:
         str: The longest path as a string of directions (E, S, D).
     """
-    n = backtracking.shape[0]
+    # Start at the bottom right corner of the backtracking matrix and trace the path back to the top left corner
+    # n = number of rows, m = number of columns
+    n, m = backtracking.shape
     path = ""
-    i, j = n - 1, n - 1
+    i, j = n - 1, m - 1
     while i != 0 or j != 0:
         direction = backtracking[i, j]
         path = direction + path
@@ -157,26 +162,33 @@ def main():
     parser.add_argument("filename", help="input file")
     parser.add_argument("-t", "--trace", help="output the longest path", action="store_true")
     parser.add_argument("-d", "--diagonal", help="allow diagonal connections", action="store_true")
+    # Add a flag to export the output to a file, to check for correctness with the test cases provided
+    parser.add_argument("-p", help="export output to a file", action="store_true")
     args = parser.parse_args()
 
     data = read_file(args.filename)
-    #print(data)
     horizontal, vertical, diagonal = process_data(data, args.diagonal)
-    #print(horizontal)
-    #print(vertical)
-    #print(diagonal)
 
     weight, backtracking, dp = find_path(horizontal, vertical, diagonal)
 
-    # print the weight of the longest path
-    print(weight)
-    #print(dp)
-    #print(backtracking)
-    
-    # if trace flag is set, print the best path
+    # Format the output
+    output = str(weight)
     if args.trace:
         path = trace_path(backtracking)
-        print(path)
+        output += "\n" + str(path)
+    output += "\n"
+    # Print the output to the console
+    print(output)
+
+    # If the '-p' flag is set, export the output to a file
+    if args.p:
+        # Create the output file name by replacing the '.in' extension with '.out'
+        input_basename = os.path.basename(args.filename)
+        output_filename = "a01508252-" + input_basename.replace(".in", ".out")
+
+        # Write the output to the file
+        with open(output_filename, "w") as output_file:
+            output_file.write(output)
 
 if __name__ == "__main__":
     main()
