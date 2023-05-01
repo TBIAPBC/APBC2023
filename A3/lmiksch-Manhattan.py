@@ -1,4 +1,5 @@
 import argparse
+import numpy as np
 
 def input_parser(input_file,diag = False):
     """Parses the input file. Ignores lines starting with #
@@ -57,27 +58,31 @@ def input_parser(input_file,diag = False):
    
     return(down_block,right_block,diag_block)
 
-def init_matrix(down_block,right_block):
+def init_matrix(down_block, right_block):
     """Creates a matrix based on the grid size derived from the input and fills the first row and column based on the weights.
     """
 
-    grid_size = (len(down_block[0]),len(right_block))
-
+    grid_size = (len(right_block)),len(down_block[0])
+    print(grid_size)
+    
     #initialize matrix
-    matrix = [[0 for x in range(grid_size[0])] for z in range(grid_size[1])]
-    dir_matrix = [["" for x in range(grid_size[0])] for z in range(grid_size[1])]
-
+    
+    matrix = np.zeros(grid_size, dtype=float)
+    dir_matrix = [["" for x in range(grid_size[1])] for z in range(grid_size[0])]
+    
     #Fill first row
-    for x in range(1,len(matrix[0])):
+    for x in range(1, grid_size[1]):
+        
         matrix[0][x] = matrix[0][x-1] + float(right_block[0][x-1]) 
+
         dir_matrix[0][x] = dir_matrix[0][x-1] + "E"
 
     # Fill first column
-    for x in range(1,len(matrix)):
+    for x in range(1, grid_size[0]):
         matrix[x][0] = matrix[x-1][0] + float(down_block[x-1][0])
         dir_matrix[x][0] = dir_matrix[x-1][0] + "S"
-
-    return matrix,dir_matrix
+       
+    return matrix, dir_matrix
 
 
 
@@ -196,7 +201,13 @@ if __name__ == "__main__":
 
     matrix, dir_matrix = fill_matrix(down_block,right_block,diag_block,matrix,dir_matrix)
 
-    print(round(matrix[-1][-1],4))
+
+    #workaround to display resulting integers as ints
+    final_weight = str(matrix[-1][-1]).split(".")
+    if final_weight[1] == "0":
+        print(final_weight[0])
+    else:
+        print(format(matrix[-1][-1],".2f"))
 
     if args.track:
         path = []
