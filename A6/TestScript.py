@@ -5,14 +5,14 @@ from scipy.stats import skewnorm
 import matplotlib.pyplot as plt
 
 # Define parameters for the left-skewed normal distribution
-a = -10  # skewness parameter
-loc = 22  # mode
-scale = 15  # standard deviation
+a = -2  # skewness parameter
+loc = 12  # mode
+scale = 8  # standard deviation
 
 # Create the distribution object
 rv = skewnorm(a, loc=loc, scale=scale)
 
-print(round(math.floor(rv.pdf(1)*100)*1.5))
+print(round(round(rv.pdf(13)*100)))
 
 # Create a range of x-values to plot
 x = np.linspace(0, 50, 1000)

@@ -14,9 +14,9 @@ from player_base import Player
 class NaiveDrifter(Player):
     def __init__(self):
         # Step amount
-        a = -10  # skewness parameter
-        loc = 22  # mode
-        scale = 15  # standard deviation
+        a = -2  # skewness parameter
+        loc = 12  # mode
+        scale = 8  # standard deviation
         # Create the distribution object
         self.rv = skewnorm(a, loc=loc, scale=scale)
 
@@ -157,7 +157,7 @@ class NaiveDrifter(Player):
         # choose how many steps
         diff = abs(selfX - gold_pos[0]) + abs(selfY - gold_pos[1])
         #step_amount = math.floor(25/diff) % 7
-        step_amount = round(math.floor(self.rv.pdf(1)*100)*1.5)
+        step_amount = round(self.rv.pdf(15)*100)
 
 
         # make a move
