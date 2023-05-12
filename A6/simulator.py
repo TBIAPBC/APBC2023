@@ -46,7 +46,11 @@ class Simulator(object):
 
 		# keep a dictionary of the mines
 		# (x, y) -> expiry_round -- the round in which the mine should expire
-		self._mines = {}  
+		self._mines = {}
+
+		# list of trap walls
+		# [(x, y)]
+		self._trap_walls = []
 
 		# the internal data, without map
 		self._status = status = []
@@ -99,6 +103,7 @@ class Simulator(object):
 			self._begin_round(r)
 			self._handle_shooting(r)
 			self._handle_setting_mines(r)
+			self._handle_trapping(r)
 			self._handle_moving(r)
 			self._handle_healing(r)
 			# TODO: something to do at the end of the round?
@@ -133,6 +138,8 @@ class Simulator(object):
 				del self._mines[xy]
 				self.map[xy] = Tile(TileStatus.Empty)
 				print("Remove expired mine at %s." % (str(xy)) )
+
+		# remove traps from last round
 
 		# relocate gold pots if timed out
 		self.goldPotRemainingRounds -=1
@@ -238,6 +245,14 @@ class Simulator(object):
 							% (str(pId), str(xy), d, self._mines[xy]) )
 				else:
 					break # don't even try to set more mines
+
+	def _handle_trapping(self, r):
+		# TO DO
+		# current plan of implementation:
+		# go through players, ask them if they want to trap
+		# handle the payment
+		# draw the player and set the traps
+		pass
 
 	def _askPlayerForMoves(self,pId):
 		try:
