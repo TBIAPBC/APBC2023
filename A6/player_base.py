@@ -31,11 +31,12 @@ class Player(object):
 
 		raise NotImplementedError("'setting mines' not implemented in '%s'." % self.__class__)
 
-	def trap_random_player(self):
+	def trap_random_player(self, status):
 		"""
 				Called to ask the player if they want to trap a random player by building walls around them for one round
 
 				@param self the Player itself
+				@param status the status
 				@returns boolean
 
 				The player answers with a boolean indicating whether they want to randomly trap a player or not.
