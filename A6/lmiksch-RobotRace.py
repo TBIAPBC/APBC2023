@@ -85,6 +85,50 @@ class lmiksch_bot(Player):
 
         return best_d[0:numMoves]
 
+    def set_mines(self, status):
+        #checks if an enemy is nearer to the pot sets mine in the optimal path from the player to the pot if enemy is near enough
+        
+
+       
+        pLoc = (status.x,status.y)
+        gLoc = next(iter(status.goldPots))
+        paths = AllShortestPaths(gLoc,self.ourMap)
+        others_loc = []
+        for x in range(pLoc[0]-3,pLoc[0]+3):
+             for y in range(pLoc[1]-3,pLoc[1]+3):
+                try:
+                    tile = status.map[x,y]
+                    if tile.obj is not None and tile.obj.is_player():
+                        # The tile is occupied by a player
+                        
+                        if x != pLoc[0] or y != pLoc[1]:
+                            others_loc.append((x,y))
+                except:
+                    continue
+        
+        #searches for bestpath for other player in places mine in the path
+        mine_loc = []
+        for enemy_loc in others_loc:
+            bestpath_enemy = paths.shortestPathFrom(enemy_loc)
+            bestpath = paths.shortestPathFrom(pLoc)
+            for x in range(1,4):
+                if bestpath_enemy[x] not in bestpath:
+                    mine_loc.append(bestpath_enemy[x])
+                    
+            
+        
+                    if random.random() < 0.50:
+                        return mine_loc
+        return []
+    
+
+        
+                         
+
+
+        
+
+
 
 
     def conv_path_to_directions(self,pos,path,gLoc):
