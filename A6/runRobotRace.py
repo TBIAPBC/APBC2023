@@ -20,7 +20,7 @@ args = parser.parse_args()
 
 robot_module_names = {"Test":"test-RobotRace",
 					"Beatme": "beatme-RobotRace",
-                    "lmiksch_test": "lmiksch-testRobot"}
+                    "lmiksch_test": "lmiksch-RobotRace"}
 
 robotmodules = { m:__import__(m) for m in robot_module_names.values() }
 
