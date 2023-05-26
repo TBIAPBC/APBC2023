@@ -123,10 +123,20 @@ class lmiksch_bot(Player):
                 except:
                      pass
         return []
-    """    
-    def trap_random_player(self, status):
-         if status.gold >= 20:
-            return True"""
+     
+    def fight_target_player(self, status):
+        others = status.others
+        others_list = []
+        
+        for other in others:
+            
+             if other != None:
+                return other.player
+
+        
+      
+             
+
 		
         
                          

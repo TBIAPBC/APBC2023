@@ -104,6 +104,7 @@ class Simulator(object):
 			self._handle_shooting(r)
 			self._handle_setting_mines(r)
 			self._handle_trapping()
+			self._handle_fighting()
 			self._handle_moving(r)
 			self._handle_healing(r)
 			# TODO: something to do at the end of the round?
@@ -305,6 +306,74 @@ class Simulator(object):
 							self._trap_walls[trap_pId].append(coords)
 						self.map[coords] = Tile(TileStatus.Wall)
 				print(f"Player {pId} trapped player {trap_pId} for this round.")
+
+
+	def _handle_fighting(self):
+		for pId in range(len(self._players)):  # go through each player
+			
+			
+			player = self._players[pId]
+			fight_target = False
+			try:
+				fight_target = player.fight_target_player(self._pubStat[pId])  # ask them if they want to fight a player 
+			except NotImplementedError:  # if it has not been implemented, fight_target will stay false
+				pass
+			except Exception as e:
+				print("ERROR: player %d raised an exception: %s" % (pId, str(e)))
+				traceback.print_exc(file=sys.stdout)
+			
+			
+			if fight_target: 
+				
+				enemy = self._players[fight_target]
+				#check if players are adjacent to each other
+
+				pLoc = (player.status.x,player.status.y)
+				eLoc = (enemy.status.x,enemy.status.y)
+				
+				if abs(pLoc[0]- eLoc[0]) <= 1 and abs(pLoc[1] - eLoc[1]) <= 1:
+					#print("they're close")
+
+					#fight! 
+
+					eHealth = enemy.status.health
+					pHealth = player.status.health
+
+					pWin = 0.7
+					pLose = 0.3
+
+					weights = [pWin,pLose]
+
+					choices = ["player","enemy"]
+					winner = random.choices(choices, weights)[0]
+					
+					#print("winner:",winner)
+					if winner == "player":
+						winner, loser  = self._players[pId], self._players[fight_target]
+					else:
+						winner, loser = self._players[fight_target], self._players[pId]
+
+					
+
+
+					"""print("Before gold transfer")
+					print("Winner:", winner.status.gold)
+					print("loser:", loser.status.gold)"""
+					earnings = round(loser.status.gold*0.05) 
+					winner.status.gold += round(loser.status.gold*0.05) 
+					loser.status.gold -= round(loser.status.gold*0.05)
+					"""print("after gold transfer")
+					print("Winner:", winner.status.gold)
+					print("loser:", loser.status.gold)"""
+					print(" ")
+					print(f"Player {winner.status.player} won against Player {loser.status.player} and stole {earnings} Gold .")
+					print(" ")
+					
+					
+
+
+
+
 
 	def _askPlayerForMoves(self,pId):
 		try:
