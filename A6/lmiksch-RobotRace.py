@@ -112,16 +112,22 @@ class lmiksch_bot(Player):
             bestpath_enemy = paths.shortestPathFrom(enemy_loc)
             bestpath = paths.shortestPathFrom(pLoc)
             for x in range(1,4):
-                if bestpath_enemy[x] not in bestpath:
-                    mine_loc.append(bestpath_enemy[x])
-                    
+                try:
+                    if bestpath_enemy[x] not in bestpath:
+                        mine_loc.append(bestpath_enemy[x])
+                        
+                
             
-        
-                    if random.random() < 0.50:
-                        return mine_loc
+                        if random.random() < 0.50:
+                            return mine_loc
+                except:
+                     pass
         return []
-    
-
+    """    
+    def trap_random_player(self, status):
+         if status.gold >= 20:
+            return True"""
+		
         
                          
 

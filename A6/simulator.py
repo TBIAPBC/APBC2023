@@ -46,7 +46,11 @@ class Simulator(object):
 
 		# keep a dictionary of the mines
 		# (x, y) -> expiry_round -- the round in which the mine should expire
-		self._mines = {}  
+		self._mines = {}
+
+		# dictionary of trap walls
+		# player id -> [(x, y), (x,y), (x,y), (x,y), (x, y), (x,y), (x,y), (x,y)]
+		self._trap_walls = {}
 
 		# the internal data, without map
 		self._status = status = []
@@ -99,6 +103,7 @@ class Simulator(object):
 			self._begin_round(r)
 			self._handle_shooting(r)
 			self._handle_setting_mines(r)
+			self._handle_trapping()
 			self._handle_moving(r)
 			self._handle_healing(r)
 			# TODO: something to do at the end of the round?
@@ -133,6 +138,12 @@ class Simulator(object):
 				del self._mines[xy]
 				self.map[xy] = Tile(TileStatus.Empty)
 				print("Remove expired mine at %s." % (str(xy)) )
+
+		# remove traps from last round
+		for pId, trap in self._trap_walls.items():
+			for wall in trap:
+				self.map[wall] = Tile(TileStatus.Empty)
+		self._trap_walls = {}
 
 		# relocate gold pots if timed out
 		self.goldPotRemainingRounds -=1
@@ -238,6 +249,62 @@ class Simulator(object):
 							% (str(pId), str(xy), d, self._mines[xy]) )
 				else:
 					break # don't even try to set more mines
+
+	def _pay_for_trap(self, pId):
+		s = self._status[pId]  # get the status of the player
+		cost = 20
+		if s.gold < cost:  # of the player cannot afford it, return false
+			return False
+		s.gold -= cost
+		self._tasksThisRound[pId] += 1
+		for pos in self._goldPots:
+			if self.params.goldDecrease and self.goldPotRemainingRounds <= self.params.goldDecreaseTime:
+				self._goldPots[pos] -= 1
+			else:
+				self._goldPots[pos] += 1
+		return True
+
+	def _handle_trapping(self):
+		for pId in range(len(self._players)):  # go through each player
+			player = self._players[pId]
+			set_trap = False
+			try:
+				set_trap = player.trap_random_player(self._pubStat[pId])  # ask them if they want to set a trap
+			except NotImplementedError:  # if it has not been implemented, set_trap will stay false
+				pass
+			except Exception as e:
+				print("ERROR: player %d raised an exception: %s" % (pId, str(e)))
+				traceback.print_exc(file=sys.stdout)
+			if set_trap:
+				if not self._pay_for_trap(pId):  # check if player paid for trap
+					break
+				players_pool = []
+				for rid in range(len(self._players)):  # create a pool where the trapped player will be drawn from
+					if rid not in self._trap_walls:  # only players that are not already trapped
+						if rid != pId:
+							players_pool.extend([rid, rid, rid, rid])
+						else:
+							players_pool.append(pId)  # the trapper is also in the pool, but only once
+				if not players_pool:
+					return
+				trap_pId = random.choice(players_pool)  # choose random player from pool
+				tId_status = self._players[trap_pId].status
+				wall_coords = [(tId_status.x - 1, tId_status.y), (tId_status.x + 1, tId_status.y),
+							   # coordinates where the walls should be
+							   (tId_status.x, tId_status.y - 1), (tId_status.x, tId_status.y + 1),
+							   (tId_status.x - 1, tId_status.y - 1), (tId_status.x + 1, tId_status.y + 1),
+							   (tId_status.x + 1, tId_status.y - 1), (tId_status.x - 1, tId_status.y + 1)]
+
+				# build walls where appropriate (not outside of the map, not on objects or where there are already walls)
+				for coords in wall_coords:
+					if coords[0] < self.map.width and coords[1] < self.map.height and coords[0] >= 0 and coords[
+						1] >= 0 and not self.map[coords].is_blocked() and self.map[coords].obj is None:
+						if trap_pId not in self._trap_walls:
+							self._trap_walls[trap_pId] = [coords]
+						else:
+							self._trap_walls[trap_pId].append(coords)
+						self.map[coords] = Tile(TileStatus.Wall)
+				print(f"Player {pId} trapped player {trap_pId} for this round.")
 
 	def _askPlayerForMoves(self,pId):
 		try:
