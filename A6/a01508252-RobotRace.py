@@ -139,6 +139,3 @@ class MyAStarPlayer(Player):
         return directions
 
 players = [MyAStarPlayer()]
-
-
-players = [MyAStarPlayer()]
