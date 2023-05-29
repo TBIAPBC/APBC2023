@@ -4,6 +4,7 @@ import heapq
 import random
 from game_utils import Direction as D, TileStatus, Map
 from player_base import Player
+from collections import deque
 
 class AStarNode:
     """
@@ -212,30 +213,54 @@ class MyAStarPlayer(Player):
             if status.map[next_pos].status != TileStatus.Wall:
                 open_spaces += 1
         return open_spaces <= 2
-                        
-    def move(self, status):
-        """
-        Determines the moves for the player in the current turn.
 
-        This method uses the A* search algorithm to find the shortest path to the gold pot. 
-        If no path is found, the player moves in a random valid direction. If a path is found, 
-        the player moves along the path. Additionally, if the player has enough gold, 
-        a trap or a mine may be set to hinder other players.
+    def explore_map(self, curpos, our_map):
         """
+        Explore the map using a breadth-first search algorithm.
+        """
+        visited = set()
+        queue = deque([curpos])
+
+        while queue:
+            pos = queue.popleft()
+            if pos not in visited:
+                visited.add(pos)
+                for direction in D:
+                    next_pos = (pos[0] + direction.as_xy()[0], pos[1] + direction.as_xy()[1])
+                    if (0 <= next_pos[0] < our_map.width and 0 <= next_pos[1] < our_map.height and
+                            our_map[next_pos[0], next_pos[1]].status != TileStatus.Wall):
+                        queue.append(next_pos)
+                if pos != curpos:
+                    return self._as_direction(curpos, pos)
+        return None
+
+    def move(self, status):
         our_map = status.map
         curpos = (status.x, status.y)
-        assert len(status.goldPots) > 0
-        g_loc = next(iter(status.goldPots))
-        # Compute A*-search to find the best path to the gold pot
-        path = a_star_search(curpos, g_loc, our_map)
-        # If no path is found, move randomly
-        if not path:
-            return [self.random_valid_direction(curpos, our_map)]
-        # Reduce the path to the next steps
-        num_moves = min(1, len(path) - 1)
-        path = path[:num_moves + 1]
-        # Calculate the directions the robot should go
-        directions = [self._as_direction(cur, next) for cur, next in zip(path, path[1:])]
+
+        if status.goldPots:
+            # If there are multiple gold pots, move towards the farthest one
+            if len(status.goldPots) > 1:
+                g_loc = max(status.goldPots, key=lambda g: heuristic(curpos, g))
+            else:
+                g_loc = next(iter(status.goldPots))
+            # Compute A*-search to find the best path to the gold pot
+            path = a_star_search(curpos, g_loc, our_map)
+            # If no path is found, move randomly
+            if not path:
+                return [self.random_valid_direction(curpos, our_map)]
+            # Reduce the path to the next steps
+            num_moves = min(1, len(path) - 1)
+            path = path[:num_moves + 1]
+            # Calculate the directions the robot should go
+            directions = [self._as_direction(cur, next) for cur, next in zip(path, path[1:])]
+        else:
+            # If there are no gold pots, explore the map
+            direction = self.explore_map(curpos, our_map)
+            if direction is not None:
+                directions = [direction]
+            else:
+                directions = [self.random_valid_direction(curpos, our_map)]
 
         # Check if the trap method exists and if the player has enough gold to set a trap
         if hasattr(self.rules, 'trap') and self.rules.gold[self.player] >= 20:
