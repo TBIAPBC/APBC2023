@@ -117,6 +117,14 @@ class MyAStarPlayer(Player):
         return random.choice(possible_directions)
 
     def set_mines(self, status):
+        """
+        Sets a mine on the path to the gold pot if an enemy player is near.
+        
+        This method uses the A* search algorithm to find the shortest path to the gold pot. 
+        It then checks each position on the path for enemy players. If an enemy player is found 
+        within a distance of 2 from the current position, a mine is set at that position.
+        """
+        
         # Check if the mine setting method exists and if the player has enough gold to set a mine
         if hasattr(self.rules, 'set_mine') and self.rules.gold[self.player] >= 20:
             # Compute A*-search to find the best path to the gold pot
@@ -133,6 +141,14 @@ class MyAStarPlayer(Player):
                         return
 
     def move(self, status):
+        """
+        Determines the moves for the player in the current turn.
+
+        This method uses the A* search algorithm to find the shortest path to the gold pot. 
+        If no path is found, the player moves in a random valid direction. If a path is found, 
+        the player moves along the path. Additionally, if the player has enough gold, 
+        a trap or a mine may be set to hinder other players.
+        """
         our_map = status.map
         curpos = (status.x, status.y)
         assert len(status.goldPots) > 0
