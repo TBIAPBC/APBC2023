@@ -136,7 +136,7 @@ class MyAStarPlayer(Player):
         self.player_name = "AStarScout"
         self.ourMap = Map(width, height)
         self.rules = rules
-
+        self.enemy_locations = {}  # Keep track of enemy locations
 
     def round_begin(self, r):
         pass
@@ -151,7 +151,7 @@ class MyAStarPlayer(Player):
                 return d
         return None
 
-    def random_valid_direction(curpos, our_map):
+    def random_valid_direction(self, curpos, our_map):
         """
         Return a random valid direction from the current position.
         """
@@ -183,9 +183,31 @@ class MyAStarPlayer(Player):
                 for enemy in status.players:
                     # If an enemy is near enough, set a mine
                     if enemy != self.player and heuristic(enemy, pos) <= 2:
-                        self.rules.set_mine(self.player, pos)
-                        return
+                        # Before setting a mine, check if the position is near a gold pot or in a narrow passage
+                        if self.is_near_gold(pos, status) or self.is_in_narrow_passage(pos, status):
+                            self.rules.set_mine(self.player, pos)
+                            return
 
+    def is_near_gold(self, pos, status):
+        """
+        Check if a position is near a gold pot.
+        """
+        for gold_pos in status.goldPots:
+            if heuristic(pos, gold_pos) <= 2:
+                return True
+        return False
+
+    def is_in_narrow_passage(self, pos, status):
+        """
+        Check if a position is in a narrow passage.
+        """
+        open_spaces = 0
+        for direction in D:
+            next_pos = (pos[0] + direction.as_xy()[0], pos[1] + direction.as_xy()[1])
+            if status.map[next_pos].status != TileStatus.Wall:
+                open_spaces += 1
+        return open_spaces <= 2
+                        
     def move(self, status):
         """
         Determines the moves for the player in the current turn.
