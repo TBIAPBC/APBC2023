@@ -234,7 +234,15 @@ class MyAStarPlayer(Player):
 
         # Check if the trap method exists and if the player has enough gold to set a trap
         if hasattr(self.rules, 'trap') and self.rules.gold[self.player] >= 20:
-            self.rules.trap(self.player)
+            # Check each enemy player
+            for enemy in status.players:
+                if enemy != self.player:
+                    # Calculate the shortest path from the enemy to our current position
+                    enemy_path = a_star_search(enemy, curpos, our_map)
+                    # If the enemy can reach our current position in the next turn, set a trap
+                    if enemy_path and len(enemy_path) <= 1:
+                        self.rules.trap(self.player)
+                        break
 
         # Call the set_mines method here.
         self.set_mines(status)
