@@ -193,7 +193,6 @@ class MyAStarPlayer(Player):
 
         return mines  # Return the list of mines (empty if no mines were set)
 
-
     def is_near_gold(self, pos, status):
         """
         Check if a position is near a gold pot.
@@ -213,6 +212,21 @@ class MyAStarPlayer(Player):
             if status.map[next_pos].status != TileStatus.Wall:
                 open_spaces += 1
         return open_spaces <= 2
+
+    def fight_target_player(self, status):
+        """
+        Called to ask the player wants to fight an adjacent player
+        @param self the Player itself
+        @param status the status
+        @returns player_id of the enemy
+        Currently the odds of winning are 0.7. The winner gets 5% of the gold of the losing player
+        If a player does not define the method, this step is skipped.
+        """
+        if self.enemy_locations:  # Check if self.enemy_locations is not empty
+            closest_player = min(self.enemy_locations.keys(), key=lambda player: heuristic(self.curpos, self.enemy_locations[player]))
+            return closest_player
+        else:
+            return None  # Return None if there are no enemies
 
     def explore_map(self, curpos, our_map):
         """
@@ -274,7 +288,7 @@ class MyAStarPlayer(Player):
                         self.rules.trap(self.player)
                         break
 
-        # Call the set_mines method here.
+        # Call the set_mines method to set mines on the path to the gold pot if an enemy player is near
         self.set_mines(status)
 
         return directions
