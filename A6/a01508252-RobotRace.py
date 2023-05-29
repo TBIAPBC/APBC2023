@@ -116,6 +116,22 @@ class MyAStarPlayer(Player):
                 possible_directions.append(direction)
         return random.choice(possible_directions)
 
+    def set_mines(self, status):
+        # Check if the mine setting method exists and if the player has enough gold to set a mine
+        if hasattr(self.rules, 'set_mine') and self.rules.gold[self.player] >= 20:
+            # Compute A*-search to find the best path to the gold pot
+            path = a_star_search(self.curpos, self.g_loc, self.our_map)
+            # If no path is found, do nothing
+            if not path:
+                return
+            # Check the positions in the path for enemy players
+            for pos in path:
+                for enemy in status.players:
+                    # If an enemy is near enough, set a mine
+                    if enemy != self.player and heuristic(enemy, pos) <= 2:
+                        self.rules.set_mine(self.player, pos)
+                        return
+
     def move(self, status):
         our_map = status.map
         curpos = (status.x, status.y)
@@ -135,6 +151,9 @@ class MyAStarPlayer(Player):
         # Check if the trap method exists and if the player has enough gold to set a trap
         if hasattr(self.rules, 'trap') and self.rules.gold[self.player] >= 20:
             self.rules.trap(self.player)
+
+        # Call the set_mines method here.
+        self.set_mines(status)
 
         return directions
 
