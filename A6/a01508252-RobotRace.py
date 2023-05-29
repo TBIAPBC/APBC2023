@@ -82,6 +82,52 @@ def a_star_search(start, goal, our_map):
 
     return []
 
+class naivePlayer(Player):
+    """
+    A naive player that moves in a random direction that isn't a wall.
+    """
+    def __init__(self):
+        self.player_name = "NaiveScout"
+
+    def reset(self, player_id, max_players, width, height, rules=None):
+        """
+        Reset the player's state at the start of a new game.
+        """
+        self.ourMap = Map(width, height)
+        self.rules = rules
+
+    def round_begin(self, r):
+        """
+        This method is called at the beginning of each round.
+        """
+        pass
+
+    def move(self, status):
+        """
+        Determines the moves for the player in the current turn.
+
+        This player will simply try to move in a random direction that isn't a wall.
+        If it can't move, it will stay in place.
+        """
+        our_map = status.map
+        curpos = (status.x, status.y)
+        return [self.random_valid_direction(curpos, our_map)]
+
+    def random_valid_direction(self, curpos, our_map):
+        """
+        Return a random valid direction from the current position.
+        """
+        possible_directions = []
+        for direction in D:
+            next_x, next_y = curpos[0] + direction.as_xy()[0], curpos[1] + direction.as_xy()[1]
+            if (0 <= next_x < our_map.width) and (0 <= next_y < our_map.height) and our_map[next_x, next_y].status != TileStatus.Wall:
+                possible_directions.append(direction)
+        if possible_directions:
+            return random.choice(possible_directions)
+        else:
+            return None
+
+
 class MyAStarPlayer(Player):
     """
     A custom player class implementing the A* search algorithm to find the shortest path to gold.
@@ -173,4 +219,4 @@ class MyAStarPlayer(Player):
 
         return directions
 
-players = [MyAStarPlayer()]
+players = [naivePlayer(), MyAStarPlayer()]
