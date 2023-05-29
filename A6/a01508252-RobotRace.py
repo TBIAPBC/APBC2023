@@ -230,7 +230,7 @@ class MyAStarPlayer(Player):
         path = a_star_search(curpos, g_loc, our_map)
         # If no path is found, move randomly
         if not path:
-            return [random_valid_direction(curpos, our_map)]
+            return [self.random_valid_direction(curpos, our_map)]
         # Reduce the path to the next steps
         num_moves = min(1, len(path) - 1)
         path = path[:num_moves + 1]
