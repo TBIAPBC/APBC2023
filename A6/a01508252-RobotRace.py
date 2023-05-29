@@ -170,14 +170,15 @@ class MyAStarPlayer(Player):
         It then checks each position on the path for enemy players. If an enemy player is found 
         within a distance of 2 from the current position, a mine is set at that position.
         """
-        
+        mines = []  # List to store the positions where mines will be set
+
         # Check if the mine setting method exists and if the player has enough gold to set a mine
         if hasattr(self.rules, 'set_mine') and self.rules.gold[self.player] >= 20:
             # Compute A*-search to find the best path to the gold pot
-            path = a_star_search(self.curpos, self.g_loc, self.our_map)
+            path = a_star_search(self.curpos, self.g_loc, self.ourMap)
             # If no path is found, do nothing
             if not path:
-                return
+                return mines
             # Check the positions in the path for enemy players
             for pos in path:
                 for enemy in status.players:
@@ -186,7 +187,11 @@ class MyAStarPlayer(Player):
                         # Before setting a mine, check if the position is near a gold pot or in a narrow passage
                         if self.is_near_gold(pos, status) or self.is_in_narrow_passage(pos, status):
                             self.rules.set_mine(self.player, pos)
-                            return
+                            mines.append(pos)  # Add the position to the list of mines
+                            return mines  # Return the list of mines as soon as one is set
+
+        return mines  # Return the list of mines (empty if no mines were set)
+
 
     def is_near_gold(self, pos, status):
         """
