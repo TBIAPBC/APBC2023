@@ -86,9 +86,11 @@ class MyAStarPlayer(Player):
     """
     A custom player class implementing the A* search algorithm to find the shortest path to gold.
     """
-    def reset(self, player_id, max_players, width, height):
+    def reset(self, player_id, max_players, width, height, rules=None):
         self.player_name = "AStarScout"
         self.ourMap = Map(width, height)
+        self.rules = rules
+
 
     def round_begin(self, r):
         pass
@@ -117,24 +119,26 @@ class MyAStarPlayer(Player):
     def move(self, status):
         our_map = status.map
         curpos = (status.x, status.y)
-
         assert len(status.goldPots) > 0
         g_loc = next(iter(status.goldPots))
-
         # Compute A*-search to find the best path to the gold pot
         path = a_star_search(curpos, g_loc, our_map)
-
         # If no path is found, move randomly
         if not path:
             return [random_valid_direction(curpos, our_map)]
-
         # Reduce the path to the next steps
         num_moves = min(1, len(path) - 1)
         path = path[:num_moves + 1]
-
         # Calculate the directions the robot should go
         directions = [self._as_direction(cur, next) for cur, next in zip(path, path[1:])]
 
+        # Check if the trap method exists and if the player has enough gold to set a trap
+        if hasattr(self.rules, 'trap') and self.rules.gold[self.player] >= 20:
+            self.rules.trap(self.player)
+
         return directions
+
+players = [MyAStarPlayer()]
+
 
 players = [MyAStarPlayer()]
