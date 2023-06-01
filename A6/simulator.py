@@ -310,8 +310,6 @@ class Simulator(object):
 
 	def _handle_fighting(self):
 		for pId in range(len(self._players)):  # go through each player
-			
-			
 			player = self._players[pId]
 			fight_target = False
 			try:
@@ -321,52 +319,45 @@ class Simulator(object):
 			except Exception as e:
 				print("ERROR: player %d raised an exception: %s" % (pId, str(e)))
 				traceback.print_exc(file=sys.stdout)
-			
-			
-			if fight_target: 
-				
+
+			if fight_target:
 				enemy = self._players[fight_target]
 				#check if players are adjacent to each other
-
 				pLoc = (player.status.x,player.status.y)
 				eLoc = (enemy.status.x,enemy.status.y)
-				
 				if abs(pLoc[0]- eLoc[0]) <= 1 and abs(pLoc[1] - eLoc[1]) <= 1:
-					#print("they're close")
-
-					#fight! 
-
 					eHealth = enemy.status.health
 					pHealth = player.status.health
 
-					pWin = 0.7
-					pLose = 0.3
+					#adjust winning odds based on health difference
+					health_odds = 0
+					if eHealth != pHealth:
+						health_odds = ((pHealth - eHealth)/100)*0.3 
 
+					pWin = 0.7 + health_odds
+					pLose = 0.3 + health_odds
 					weights = [pWin,pLose]
-
 					choices = ["player","enemy"]
 					winner = random.choices(choices, weights)[0]
 					
-					#print("winner:",winner)
 					if winner == "player":
 						winner, loser  = self._players[pId], self._players[fight_target]
+						player.status.health -= 5
+						enemy.status.health  -= 10
 					else:
 						winner, loser = self._players[fight_target], self._players[pId]
+						player.status.health -= 15
+						enemy.status.health  -= 5
 
-					
-
-
-					"""print("Before gold transfer")
-					print("Winner:", winner.status.gold)
-					print("loser:", loser.status.gold)"""
+					#update gold
 					earnings = round(loser.status.gold*0.05) 
 					winner.status.gold += round(loser.status.gold*0.05) 
 					loser.status.gold -= round(loser.status.gold*0.05)
-					"""print("after gold transfer")
-					print("Winner:", winner.status.gold)
-					print("loser:", loser.status.gold)"""
+
 					print(" ")
 					print(f"Player {winner.status.player} won against Player {loser.status.player} and stole {earnings} Gold .")
+					print(f"Player {winner.status.player} is currently at {winner.status.health} Health")
+					print(f"Player {loser.status.player} is currently at {loser.status.health} Health")
 					print(" ")
 					
 					

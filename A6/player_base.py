@@ -62,7 +62,8 @@ class Player(object):
 				@param status the status
 				@returns player_id of the enemy
 
-				Currently the odds of winning are 0.7. The winner gets 5% of the gold of the losing player
+				Currently the base odds of winning are 0.7. Based on the health difference, the odds shift to the player who has the highest health.
+				The winner gets 5% of the gold of the losing player
 
 				If a player does not define the method, this step is
 				skipped.
