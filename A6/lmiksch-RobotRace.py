@@ -32,6 +32,7 @@ class lmiksch_bot(Player):
     def reset(self, player_id, max_players, width, height):
         self.player_name = "lmiksch_test"
         self.ourMap = Map(width,height)
+        self.visited = [[0] * width  for x in range(height)]
         #raise NotImplementedError("'reset' not implemented in '%s'." % self.__class__)
     
     def round_begin(self, r):
@@ -73,7 +74,14 @@ class lmiksch_bot(Player):
             return []
 
         bestpath = paths.shortestPathFrom(pos)
-        
+        #checks if a player is in the way and moves to a different position
+        for coord in bestpath[1:]:
+            x = coord[0]
+            y = coord[1]
+            tile = status.map[x,y]
+            if tile.obj is not None and tile.obj.is_player():
+                move = self.possible_moves(status,ourMap,self.visited)
+                return [move]
 
         best_d = self.conv_path_to_directions(pos,bestpath[1:],gLoc)
 
@@ -126,29 +134,13 @@ class lmiksch_bot(Player):
      
     def fight_target_player(self, status):
         others = status.others
-        others_list = []
-        
         for other in others:
-            
-             if other != None:
+            if other != None and status.health >= other.health:
                 return other.player
 
         
-      
-             
-
-		
-        
-                         
-
-
-        
-
-
-
 
     def conv_path_to_directions(self,pos,path,gLoc):
-        #move_dict = {"up": ( 0,  1),"down": ( 0,  -1),"left": ( -1,  0),"right": ( 1,  0),"up_left": ( -1,  1),"up_right": ( 1,  1),"down_left": ( -1,  -1),"down_right": ( 1,  -1)}
         directions = []
         
         for pathpos in path:
@@ -169,18 +161,54 @@ class lmiksch_bot(Player):
         #adding final move to pot
         for d in D: 
              d_xy = d.as_xy()
-             
              move = (gLoc[0] - pos[0], gLoc[1] - pos[1])
-             
              if d_xy[0] == move[0] and d_xy[1] == move[1]:
                       directions.append(d)
-                      
-                      
                       break
 
 
         return directions
 
+    def possible_moves(self,status,ourMap,visited):
+        
+
+        neighbours = []
+        for d in D:
+            diff = d.as_xy()
+            coord = status.x + diff[0], status.y + diff[1]
+            if coord[0] < 0 or coord[0] >= status.map.width:
+                continue
+            if coord[1] < 0 or coord[1] >= status.map.height:
+                continue
+            tile = ourMap[coord]
+            if tile.status != TileStatus.Wall:
+                neighbours.append((d, coord))
+        if len(neighbours) == 0:
+            print("Seriously map makers? Thanks!")
+            assert False
+
+        
+        best_move = []
+        best_dir = None
+        best_move_diff = 999
+        gLoc = next(iter(status.goldPots))
+        
+        
+        for d, dir in neighbours:
+            diff = d.as_xy()
+            c_diff = abs(gLoc[0] - dir[0]) + abs(gLoc[1] - dir[1])
+            
+            
+            if c_diff < best_move_diff and self.visited[dir[0]][dir[1]] == 0:
+                
+                best_move_diff = c_diff
+                best_move.append(d)
+                best_dir = dir
+                
+                    
+        
+        
+        return best_move[-1]
 
               
               
