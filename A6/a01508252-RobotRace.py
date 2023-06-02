@@ -90,8 +90,10 @@ class BasePlayer(Player):
     """
     A base player class that implements the Player interface. This class can be used as a base for other player classes.
     """
-    def __init__(self):
-        self.player_name = "BasePlayer"
+    def __init__(self, player_name):
+        self.player_name = player_name
+        self.ourMap = None
+        self.rules = None
 
     def reset(self, player_id, max_players, width, height, rules=None):
         """
@@ -126,8 +128,7 @@ class naivePlayer(BasePlayer):
     A naive player that moves in a random direction that isn't a wall.
     """
     def __init__(self):
-        super().__init__()
-        self.player_name = "NaiveScout"
+        super().__init__("NaiveScout")
 
     def move(self, status):
         """
@@ -146,10 +147,9 @@ class MyAStarPlayer(BasePlayer):
     A custom player class implementing the A* search algorithm to find the shortest path to gold.
     """
     def __init__(self):
-        super().__init__()
-        self.player_name = "AStarScout"
+        super().__init__("AStarScout")
         self.enemy_locations = {}  # Keep track of enemy locations
-
+        
     def _as_direction(self, curpos, nextpos):
         """
         Calculate the direction from the current position to the next position.
@@ -163,10 +163,6 @@ class MyAStarPlayer(BasePlayer):
     def set_mines(self, status):
         """
         Sets a mine on the path to the gold pot if an enemy player is near.
-        
-        This method uses the A* search algorithm to find the shortest path to the gold pot. 
-        It then checks each position on the path for enemy players. If an enemy player is found 
-        within a distance of 2 from the current position, a mine is set at that position.
         """
         mines = []  # List to store the positions where mines will be set
 
@@ -177,16 +173,19 @@ class MyAStarPlayer(BasePlayer):
             # If no path is found, do nothing
             if not path:
                 return mines
-            # Check the positions in the path for enemy players
-            for pos in path:
-                for enemy in status.players:
-                    # If an enemy is near enough, set a mine
-                    if enemy != self.player and heuristic(enemy, pos) <= 2:
-                        # Before setting a mine, check if the position is near a gold pot or in a narrow passage
-                        if self.is_near_gold(pos, status) or self.is_in_narrow_passage(pos, status):
-                            self.rules.set_mine(self.player, pos)
-                            mines.append(pos)  # Add the position to the list of mines
-                            return mines  # Return the list of mines as soon as one is set
+
+            # Convert the path to a set for faster lookup
+            path_set = set(path)
+
+            # Check each enemy player
+            for enemy in status.players:
+                # If an enemy is near the path, set a mine
+                if any(heuristic(enemy, pos) <= 2 for pos in path_set):
+                    # Before setting a mine, check if the position is near a gold pot or in a narrow passage
+                    if self.is_near_gold(pos, status) or self.is_in_narrow_passage(pos, status):
+                        self.rules.set_mine(self.player, pos)
+                        mines.append(pos)  # Add the position to the list of mines
+                        return mines  # Return the list of mines as soon as one is set
 
         return mines  # Return the list of mines (empty if no mines were set)
 
@@ -230,7 +229,7 @@ class MyAStarPlayer(BasePlayer):
         Explore the map using a breadth-first search algorithm.
         """
         visited = set()
-        queue = deque([curpos])
+        queue = deque([curpos]) # Use a deque to store the positions to visit
 
         while queue:
             pos = queue.popleft()
