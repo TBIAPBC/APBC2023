@@ -11,6 +11,9 @@ class AStarNode:
     A class representing a node in the A* search algorithm.
     """
     def __init__(self, position, parent=None, g=0, h=0):
+        """
+        Initialize a new node with the given position, parent node, cost to reach the node from the start node, and estimated cost to reach the goal node from the current node.
+        """
         self.position = position
         self.parent = parent
         self.g = g  # The cost to reach the current node from the start node
@@ -83,12 +86,12 @@ def a_star_search(start, goal, our_map):
 
     return []
 
-class naivePlayer(Player):
+class BasePlayer(Player):
     """
-    A naive player that moves in a random direction that isn't a wall.
+    A base player class that implements the Player interface. This class can be used as a base for other player classes.
     """
     def __init__(self):
-        self.player_name = "NaiveScout"
+        self.player_name = "BasePlayer"
 
     def reset(self, player_id, max_players, width, height, rules=None):
         """
@@ -103,17 +106,6 @@ class naivePlayer(Player):
         """
         pass
 
-    def move(self, status):
-        """
-        Determines the moves for the player in the current turn.
-
-        This player will simply try to move in a random direction that isn't a wall.
-        If it can't move, it will stay in place.
-        """
-        our_map = status.map
-        curpos = (status.x, status.y)
-        return [self.random_valid_direction(curpos, our_map)]
-
     def random_valid_direction(self, curpos, our_map):
         """
         Return a random valid direction from the current position.
@@ -127,20 +119,36 @@ class naivePlayer(Player):
             return random.choice(possible_directions)
         else:
             return None
+        
+
+class naivePlayer(BasePlayer):
+    """
+    A naive player that moves in a random direction that isn't a wall.
+    """
+    def __init__(self):
+        super().__init__()
+        self.player_name = "NaiveScout"
+
+    def move(self, status):
+        """
+        Determines the moves for the player in the current turn.
+
+        This player will simply try to move in a random direction that isn't a wall.
+        If it can't move, it will stay in place.
+        """
+        our_map = status.map
+        curpos = (status.x, status.y)
+        return [self.random_valid_direction(curpos, our_map)]
 
 
-class MyAStarPlayer(Player):
+class MyAStarPlayer(BasePlayer):
     """
     A custom player class implementing the A* search algorithm to find the shortest path to gold.
     """
-    def reset(self, player_id, max_players, width, height, rules=None):
+    def __init__(self):
+        super().__init__()
         self.player_name = "AStarScout"
-        self.ourMap = Map(width, height)
-        self.rules = rules
         self.enemy_locations = {}  # Keep track of enemy locations
-
-    def round_begin(self, r):
-        pass
 
     def _as_direction(self, curpos, nextpos):
         """
@@ -151,17 +159,6 @@ class MyAStarPlayer(Player):
             if (curpos[0] + diff[0], curpos[1] + diff[1]) == nextpos:
                 return d
         return None
-
-    def random_valid_direction(self, curpos, our_map):
-        """
-        Return a random valid direction from the current position.
-        """
-        possible_directions = []
-        for direction in D:
-            next_x, next_y = curpos[0] + direction.as_xy()[0], curpos[1] + direction.as_xy()[1]
-            if (0 <= next_x < our_map.width) and (0 <= next_y < our_map.height) and our_map[next_x, next_y].status != TileStatus.Wall:
-                possible_directions.append(direction)
-        return random.choice(possible_directions)
 
     def set_mines(self, status):
         """
