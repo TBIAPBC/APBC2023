@@ -149,7 +149,8 @@ class MyAStarPlayer(BasePlayer):
     def __init__(self):
         super().__init__("AStarScout")
         self.enemy_locations = {}  # Keep track of enemy locations
-        
+        self.visited = set()  # Keep track of visited locations
+
     def _as_direction(self, curpos, nextpos):
         """
         Calculate the direction from the current position to the next position.
@@ -220,9 +221,9 @@ class MyAStarPlayer(BasePlayer):
         """
         if self.enemy_locations:  # Check if self.enemy_locations is not empty
             closest_player = min(self.enemy_locations.keys(), key=lambda player: heuristic(self.curpos, self.enemy_locations[player]))
-            return closest_player
-        else:
-            return None  # Return None if there are no enemies
+            if status.health > status.players[closest_player].health:  # Only fight if we have more health
+                return closest_player
+        return None  # Return None if there are no enemies
 
     def explore_map(self, curpos, our_map):
         """
@@ -247,44 +248,34 @@ class MyAStarPlayer(BasePlayer):
     def move(self, status):
         our_map = status.map
         curpos = (status.x, status.y)
+        self.visited.add(curpos)  # Add current position to visited locations
 
+        # Prioritize gold pots with more gold that are closer
         if status.goldPots:
-            # If there are multiple gold pots, move towards the farthest one
-            if len(status.goldPots) > 1:
-                g_loc = max(status.goldPots, key=lambda g: heuristic(curpos, g))
-            else:
-                g_loc = next(iter(status.goldPots))
-            # Compute A*-search to find the best path to the gold pot
-            path = a_star_search(curpos, g_loc, our_map)
-            # If no path is found, move randomly
+            g_loc = max(status.goldPots, key=lambda g: status.goldPots[g] / heuristic(curpos, g))
+            path = a_star_search(curpos, g_loc, our_map)  # A* search is performed here
             if not path:
                 return [self.random_valid_direction(curpos, our_map)]
-            # Reduce the path to the next steps
             num_moves = min(1, len(path) - 1)
             path = path[:num_moves + 1]
-            # Calculate the directions the robot should go
             directions = [self._as_direction(cur, next) for cur, next in zip(path, path[1:])]
         else:
-            # If there are no gold pots, explore the map
             direction = self.explore_map(curpos, our_map)
             if direction is not None:
                 directions = [direction]
             else:
                 directions = [self.random_valid_direction(curpos, our_map)]
 
-        # Check if the trap method exists and if the player has enough gold to set a trap
+        # Set traps if an enemy can reach our current position in the next turn
         if hasattr(self.rules, 'trap') and self.rules.gold[self.player] >= 20:
-            # Check each enemy player
             for enemy in status.players:
                 if enemy != self.player:
-                    # Calculate the shortest path from the enemy to our current position
                     enemy_path = a_star_search(enemy, curpos, our_map)
-                    # If the enemy can reach our current position in the next turn, set a trap
                     if enemy_path and len(enemy_path) <= 1:
                         self.rules.trap(self.player)
                         break
 
-        # Call the set_mines method to set mines on the path to the gold pot if an enemy player is near
+        # Set mines on predicted paths of other players
         self.set_mines(status)
 
         return directions
