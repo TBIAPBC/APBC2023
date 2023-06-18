@@ -169,21 +169,23 @@ class NaiveDrifter(Player):
         return moves
 
     def fight_target_player(self, status):
-        health_others = [p.health for p in status.others]
-        gold_others = [p.gold for p in status.others]
-        max_index = np.argmax(gold_others)
-        # this ensures that the robot just hits down at poorer and weaker fellows
-        if max_index != status.player:
-            for other in health_others:
-                if other is not None and status.health >= other:
-                    return other.player
-        else:
-            return None
+        others = status.others
+        gold_others = [p.gold for p in status.others if p is not None]
+        if gold_others:
+            max_index = np.argmax(gold_others)
+            # this ensures that the robot just hits down at poorer and weaker fellows
+            if max_index != status.player:
+                for other in others:
+                    if other is not None and status.health >= other.health:
+                        return other.player
+        return False
 
     def trap_random_player(self, status):
-        gold_others = [p.gold for p in status.others]
-        if max(gold_others) > status.gold > 20:
-            return True
+        gold_others = [p.gold for p in status.others if p is not None]
+        if gold_others:
+            if max(gold_others) > status.gold > 20:
+                return True
+
 
 
 players = [NaiveDrifter()]
