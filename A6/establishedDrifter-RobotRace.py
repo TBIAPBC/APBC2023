@@ -83,7 +83,26 @@ class EstablishedDrifter(Player):
 
         return self._as_directions(my_pos, bestpath[:numMoves])
 
+    def fight_target_player(self, status):
+        health_others = [p.health for p in status.others]
+        gold_others = [p.gold for p in status.others]
+        max_index = np.argmax(gold_others)
+        # this ensures that the robot just hits down at poorer and weaker fellows
+        if max_index != status.player:
+            for other in health_others:
+                if other is not None and status.health >= other:
+                    return other.player
+        else:
+            return None
 
+    def trap_random_player(self, status):
+        gold_others = [p.gold for p in status.others]
+        if max(gold_others) > status.gold > 20:
+            return True
+
+
+
+        
 
 class MyShortestPaths:
     def __init__(self,sink,map):
@@ -171,6 +190,7 @@ class MyShortestPaths:
             xy = random.choice(potentialNextXYs)
             curdist -= 1
         return path
+
 
 
 players = [EstablishedDrifter()]
