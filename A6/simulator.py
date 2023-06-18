@@ -276,16 +276,27 @@ class Simulator(object):
 			except Exception as e:
 				print("ERROR: player %d raised an exception: %s" % (pId, str(e)))
 				traceback.print_exc(file=sys.stdout)
+
+			players_pool = []
 			if set_trap:
 				if not self._pay_for_trap(pId):  # check if player paid for trap
-					break
-				players_pool = []
-				for rid in range(len(self._players)):  # create a pool where the trapped player will be drawn from
-					if rid not in self._trap_walls:  # only players that are not already trapped
-						if rid != pId:
-							players_pool.extend([rid, rid, rid, rid])
-						else:
-							players_pool.append(pId)  # the trapper is also in the pool, but only once
+					players_pool = [pId]  # punishment for not being able to pay is getting trapped
+				else:
+					wealth = []
+					for rid in range(len(self._players)):
+						if rid == pId:
+							continue
+						wealth.append(self._players[rid].status.gold)
+					wealthiest = wealth.index(max(wealth))
+					for rid in range(len(self._players)):  # create a pool where the trapped player will be drawn from
+						if rid not in self._trap_walls:  # only players that are not already trapped
+							if rid != pId:
+								if rid == wealthiest:
+									players_pool.extend([rid, rid, rid, rid, rid, rid, rid, rid])
+								else:
+									players_pool.extend([rid, rid])
+							else:
+								players_pool.append(pId)  # the trapper is also in the pool, but only once
 				if not players_pool:
 					return
 				trap_pId = random.choice(players_pool)  # choose random player from pool
@@ -360,11 +371,6 @@ class Simulator(object):
 					print(f"Player {loser.status.player} is currently at {loser.status.health} Health")
 					print(" ")
 					
-					
-
-
-
-
 
 	def _askPlayerForMoves(self,pId):
 		try:

@@ -51,7 +51,7 @@ class Player(object):
 				skipped.
 				"""
 		raise NotImplementedError("'strap_random_player' not implemented in '%s'." % self.__class__)
-	
+
 	def fight_target_player(self,status):
 
 		"""
@@ -73,4 +73,3 @@ class Player(object):
 		
 
 		raise NotImplementedError("fight_target_player' not implemented in '%s'." % self.__class__)
-	
