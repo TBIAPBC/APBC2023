@@ -21,7 +21,10 @@ args = parser.parse_args()
 
 robot_module_names = {  "Beatme": "beatme-RobotRace",
                         "AD": "sophisticatedDrifters-RobotRace",
-                        "lmiksch_test": "lmiksch-RobotRace"}
+                        "lmiksch_test": "lmiksch-RobotRace",
+                        "a01508252": "a01508252-RobotRace-AStarScout",
+                        "a01508252_2": "a01508252-RobotRace-AnotherAStarScout"
+                        }
 
 
 robotmodules = { m:__import__(m) for m in robot_module_names.values() }
