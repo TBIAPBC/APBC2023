@@ -194,7 +194,10 @@ class AggressiveDrifter(Player):
         gold_others = [p.gold for p in status.others if p is not None]
         if gold_others:
             if max(gold_others) > status.gold > 20:
-                return True
+                if random.randint(0,10) < 7:
+                    return True
+                else:
+                    return False
 
 
 
@@ -295,7 +298,10 @@ class EstablishedDrifter(Player):
         gold_others = [p.gold for p in status.others if p is not None]
         if gold_others:
             if max(gold_others) > status.gold > 20:
-                return True
+                if random.randint(0,10) < 5:
+                    return True
+                else:
+                    return False
 
 
 class MyShortestPaths:
