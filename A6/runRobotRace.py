@@ -18,11 +18,14 @@ parser.add_argument('--map', help="specify map file", type=str,default=None)
 
 args = parser.parse_args()
 
+
 robot_module_names = {  "Test":"test-RobotRace",
                         "Beatme": "beatme-RobotRace",
                         "Naive Drifter": "naiveDrifter-RobotRace",
                         "DK": "establishedDrifter-RobotRace",
-                        "AD": "aggressiveDrifter-RobotRace"}
+                        "AD": "aggressiveDrifter-RobotRace",
+                        "lmiksch_test": "lmiksch-RobotRace"}
+
 
 robotmodules = { m:__import__(m) for m in robot_module_names.values() }
 
