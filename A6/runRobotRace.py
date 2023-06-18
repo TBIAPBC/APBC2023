@@ -19,8 +19,7 @@ parser.add_argument('--map', help="specify map file", type=str,default=None)
 args = parser.parse_args()
 
 
-robot_module_names = {  "Test":"test-RobotRace",
-                        "Beatme": "beatme-RobotRace",
+robot_module_names = {  "Beatme": "beatme-RobotRace",
                         "AD": "sophisticatedDrifters-RobotRace",
                         "lmiksch_test": "lmiksch-RobotRace"}
 

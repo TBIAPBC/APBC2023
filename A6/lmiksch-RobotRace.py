@@ -278,9 +278,6 @@ class lmiksch_naive(Player):
         move = self.possible_moves(status,ourMap,self.visited)
 
 
-
-     
-
         
         return [move]
 
