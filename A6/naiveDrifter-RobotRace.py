@@ -43,7 +43,7 @@ class NaiveDrifter(Player):
 
     def reset(self, player_id, max_players, width, height):
         # the player_id is an int, which can be converted to the name printed in the board
-        self.player_name = "Drifter"
+        self.player_name = "Naive Drifter"
 
     def round_begin(self, r):
         print("Welcome to round ", r, "---", self.status.params.rounds - r + 1, " to go.")
