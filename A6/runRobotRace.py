@@ -18,8 +18,13 @@ parser.add_argument('--map', help="specify map file", type=str,default=None)
 
 args = parser.parse_args()
 
-robot_module_names = {"Test":"test-RobotRace",
-					"Beatme": "beatme-RobotRace"}
+
+robot_module_names = {  "Test":"test-RobotRace",
+                        "Beatme": "beatme-RobotRace",
+                        "Naive Drifter": "naiveDrifter-RobotRace",
+                        "AD": "sophisticatedDrifters-RobotRace",
+                        "lmiksch_test": "lmiksch-RobotRace"}
+
 
 robotmodules = { m:__import__(m) for m in robot_module_names.values() }
 
@@ -31,8 +36,8 @@ else:
 sim = Simulator(map=m, vizfile=args.viz, framerate=args.framerate)
 
 for name,module_name in robot_module_names.items():
-	for p in robotmodules[module_name].players:
-		p.player_modname = name
-		sim.add_player(p)
+    for p in robotmodules[module_name].players:
+        p.player_modname = name
+        sim.add_player(p)
 
 sim.play(rounds=args.number)
