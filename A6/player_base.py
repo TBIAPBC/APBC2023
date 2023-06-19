@@ -51,3 +51,25 @@ class Player(object):
 				skipped.
 				"""
 		raise NotImplementedError("'strap_random_player' not implemented in '%s'." % self.__class__)
+
+	def fight_target_player(self,status):
+
+		"""
+
+			Called to ask the player wants to fight an adjacent player
+
+				@param self the Player itself
+				@param status the status
+				@returns player_id of the enemy
+
+				Currently the base odds of winning are 0.7. Based on the health difference, the odds shift to the player who has the highest health.
+				The winner gets 5% of the gold of the losing player
+
+				If a player does not define the method, this step is
+				skipped.
+
+
+		"""
+
+
+		raise NotImplementedError("fight_target_player' not implemented in '%s'." % self.__class__)
