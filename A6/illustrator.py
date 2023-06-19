@@ -11,6 +11,7 @@ class Illustrator:
         self.goldpos = []
         self.goldamount = []
         self.minepos = []
+        self.trappos = []
         self.minetime = []
 
         self.width = m.width
@@ -63,6 +64,15 @@ class Illustrator:
         self.minepos.append(minepos)
         self.minetime.append(list(mines.values()))
 
+    def append_traps(self, traps):
+        trap_pos = []
+        for t in traps:
+            trap_pos.extend(t)
+        trap_pos = trap_pos + [(-1, -1)]
+        trap_pos = trap_pos * 5
+        trap_pos = trap_pos[:5]
+        self.trappos.append(trap_pos)
+
     def _illustrate(self):
         fig, self.ax = plt.subplots(
             nrows=1, ncols=1, figsize=(8, 8))
@@ -73,6 +83,7 @@ class Illustrator:
         self.init_trails()
         self.init_goldpots()
         self.init_mines()
+        self.init_traps()
 
         gif = FuncAnimation(fig, self.illustrate_round,
                             self.n_rounds)
@@ -115,6 +126,9 @@ class Illustrator:
         self.mines = self.ax.scatter(
             x=[], y=[], marker='X', edgecolors='k', c='red')
 
+    def init_traps(self):
+        self.traps = self.ax.scatter(x=[], y=[], marker='s', c='red', s=self.markersize, edgecolors='w')
+
     def illustrate_round(self, i):
         def pivot(array):
             return list(zip(*array))
@@ -137,6 +151,9 @@ class Illustrator:
 
         # mines
         self.mines.set_offsets(self.minepos[i])
+
+        #traps
+        self.traps.set_offsets(self.trappos[i])
 
         # trails
         lo = [0, i-5][i-5 >= 0]
