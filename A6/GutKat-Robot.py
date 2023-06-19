@@ -77,11 +77,6 @@ class GutKat_player(Player):
         self.total_cost = 0
 
     def move(self, status):
-        '''
-         Find mines - health reduction
-       idk? make better
-        '''
-
         #get gold, health, gold location, robot location and and map
         self.gold = status.gold
         self.health = status.health
@@ -207,20 +202,20 @@ class GutKat_player(Player):
                 except:
                     pass
             # choose random from neighbours remaining
-            cor_x, cor_y = random.choice(neigh)
-            # get direction
-            dir_x, dir_y = cor_x - rob_x, cor_y - rob_y
-            # get direction and append it
-            move = coor_to_dir(dir_x, dir_y)
-            moves.append(move)
-            # remove done steps from total steps
-            numMoves -= 1
-            # reset stuck to 0
-            self.stuck = 0
-
-            # update our position and paths (blocked position)
-            rob_x, rob_y = cor_x, cor_y
-            paths = AllShortestPaths((pot_x, pot_y), myMap)
+            if neigh:
+                cor_x, cor_y = random.choice(neigh)
+                # get direction
+                dir_x, dir_y = cor_x - rob_x, cor_y - rob_y
+                # get direction and append it
+                move = coor_to_dir(dir_x, dir_y)
+                moves.append(move)
+                # remove done steps from total steps
+                numMoves -= 1
+                # reset stuck to 0
+                self.stuck = 0
+                # update our position and paths (blocked position)
+                rob_x, rob_y = cor_x, cor_y
+                paths = AllShortestPaths((pot_x, pot_y), myMap)
 
         # enumerate over our number of steps
         for i in range(0, numMoves):
@@ -359,7 +354,7 @@ class GutKat_player(Player):
                 return max_k
 
         elif gold >= 250:
-            return min(max_k, 4)
+            return min(max_k, 3)
 
         else:
             if self.mode["map"] == "big":
@@ -371,6 +366,7 @@ class GutKat_player(Player):
             #steps = round((steps_to_gold / gold_distance) * 4)
             steps = round((max_k / gold_distance) * 4)
             steps = max(1, steps) #maximal_steps
+            steps = min(3, steps)
             return steps
 
 
