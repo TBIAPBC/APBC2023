@@ -18,7 +18,7 @@ class GutKat_player(Player):
         self.myMap = Map(width, height)
         self.moves = [D.up, D.left, D.down, D.right, D.up_left, D.down_left, D.down_right, D.up_right]
         self.gold = 100
-        self.players = []
+        self.players = {}
         self.paths_players = []
         self.mines = {}
         self.last_moves = []
@@ -34,7 +34,7 @@ class GutKat_player(Player):
         self.gold_amount = None
         self.set_mine = None
         self.mode = {"map": "normal", "players": max_players}
-        if width >= 50:
+        if width >= 40:
             self.mode["map"] = "big"
 
 
@@ -70,34 +70,34 @@ class GutKat_player(Player):
         #check if some of my mines are still valid
         self.check_mines()
 
-        # reset players and paths - they (probably) moved in last round
-        self.players = {}
-        self.paths_players = []
-
         #check map
-        players = {}
-        for x in range(myMap.width):
-            for y in range(myMap.height):
-                tile = status.map[x, y]
-                # if we know tile status - remember it
-                if tile.status != TileStatus.Unknown:
-                    myMap[x, y].status = tile.status
-                    obj = tile.obj
-                    if obj is not None:
-                        if obj.is_gold():
-                            continue
-                        else:
-                            # found myself
-                            if obj.is_player(status.player):
-                                continue
-                            # found other player
-                            else:
-                                # remember other player in dictionary
-                                other_player_id = obj.as_player()
-                                players[other_player_id] = (x,y)
+        # players = {}
+        # for x in range(myMap.width):
+        #     for y in range(myMap.height):
+        #         tile = status.map[x, y]
+        #         # if we know tile status - remember it
+        #         if tile.status != TileStatus.Unknown:
+        #             myMap[x, y].status = tile.status
+        #             obj = tile.obj
+        #             if obj is not None:
+        #                 if obj.is_gold():
+        #                     continue
+        #                 else:
+        #                     # found myself
+        #                     if obj.is_player(status.player):
+        #                         continue
+        #                     # found other player
+        #                     else:
+        #                         # remember other player in dictionary
+        #                         other_player_id = obj.as_player()
+        #                         players[other_player_id] = (x,y)
+        #
+        # # update map
+        # self.myMap = myMap
 
-        # update map
-        self.myMap = myMap
+        # reset players and paths - they (probably) moved in last round
+        players = self.players
+        paths_players = self.paths_players
 
         moves = []
         # euclidean distance to pot
@@ -106,20 +106,6 @@ class GutKat_player(Player):
         paths = AllShortestPaths((pot_x, pot_y), myMap)
         # calculate number of moves to gold
         numMoves = self.calculate_actions(self.gold, paths, (rob_x,rob_y), distance_pot)
-
-        # if we know where other players are calculate path to gold of players
-        if players:
-            paths_players = []
-            for play_x, play_y in players.values():
-                #path = paths.shortestPathFrom((play_x, play_y))
-                try:
-                    paths_players.append(paths.shortestPathFrom((play_x, play_y)))
-                except:
-                    pass
-            # remember paths_player for next round (used for setting mines)
-            self.paths_players = paths_players
-        # remember players (used for setting mines)
-        self.players = players
 
         neighbour_near = False
         pls_move = False
@@ -155,7 +141,7 @@ class GutKat_player(Player):
         self.position = (rob_x, rob_y)
 
         # if we are in same position for 2 rounds, we are probably stuck
-        if self.stuck >= 1 and self.last_moves and neighbour_near or self.stuck >= 4 or pls_move:
+        if self.stuck >= 1 and self.last_moves and neighbour_near or self.stuck >= 3 or pls_move:
             # if we are stuck, remember this position to be blocked (set to Wall)
             blocked_x, blocked_y = rob_x, rob_y
             myMap[blocked_x, blocked_y].status = TileStatus.Wall
@@ -168,12 +154,14 @@ class GutKat_player(Player):
                 neigh.remove(move)
             except:
                 pass
+
             if self.set_mine:
                 try:
                     for mine in self.set_mine:
                         neigh.remove(mine)
                 except:
                     pass
+
             # choose random from neighbours remaining
             if neigh:
                 cor_x, cor_y = random.choice(neigh)
@@ -189,6 +177,8 @@ class GutKat_player(Player):
                 # update our position and paths (blocked position)
                 rob_x, rob_y = cor_x, cor_y
                 paths = AllShortestPaths((pot_x, pot_y), myMap)
+
+
 
         # enumerate over our number of steps
         for i in range(0, numMoves):
@@ -305,6 +295,7 @@ class GutKat_player(Player):
         k = self.k
         total_cost = self.total_cost
         gold_amount = self.gold_amount
+
         gold = gold * 0.75
         if not gold_amount:
             gold_amount = 100
@@ -329,9 +320,11 @@ class GutKat_player(Player):
 
         else:
             if self.mode["map"] == "big":
-                if steps_to_gold > (self.myMap.width * (2/3)):
+                if steps_to_gold > (self.myMap.width * (1/2)):
+                    self.stuck = 0
                     return 0
-                if self.goldPotTimeOut >= 12:
+                if self.goldPotTimeOut >= 15:
+                    self.stuck = 0
                     return 0
 
             #steps = round((steps_to_gold / gold_distance) * 4)
@@ -357,6 +350,60 @@ class GutKat_player(Player):
 
 
     def set_mines(self, status):
+        self.gold = status.gold
+        self.health = status.health
+        myMap = self.myMap
+        pot = status.goldPots
+
+        # pot_money =
+        pot_x, pot_y = next(iter(pot))[0], next(iter(pot))[1]
+        rob_x, rob_y = status.x, status.y
+        self.gold_amount = (pot[pot_x, pot_y])
+        self.goldPosition = (pot_x, pot_y)
+
+        # reset players and paths - they (probably) moved in last round
+        self.players = {}
+        self.paths_players = []
+        # check map
+        players = {}
+        for x in range(myMap.width):
+            for y in range(myMap.height):
+                tile = status.map[x, y]
+                # if we know tile status - remember it
+                if tile.status != TileStatus.Unknown:
+                    myMap[x, y].status = tile.status
+                    obj = tile.obj
+                    if obj is not None:
+                        if obj.is_gold():
+                            continue
+                        else:
+                            # found myself
+                            if obj.is_player(status.player):
+                                continue
+                            # found other player
+                            else:
+                                # remember other player in dictionary
+                                other_player_id = obj.as_player()
+                                players[other_player_id] = (x, y)
+
+        paths = AllShortestPaths((pot_x, pot_y), myMap)
+        # if we know where other players are calculate path to gold of players
+        if players:
+            paths_players = []
+            for play_x, play_y in players.values():
+                #path = paths.shortestPathFrom((play_x, play_y))
+                try:
+                    paths_players.append(paths.shortestPathFrom((play_x, play_y)))
+                except:
+                    pass
+            # remember paths_player for next round (used for setting mines)
+            self.paths_players = paths_players
+
+
+        # update map
+        self.myMap = myMap
+        self.players = players
+
         mines = []
         k = self.k
         total_cost = self.total_cost
@@ -368,13 +415,12 @@ class GutKat_player(Player):
                     total_cost += k
                 self.set_mine = None
 
-            if self.players and self.gold >= 100:
-                paths_players = self.paths_players
-                path = self.path
-                for player_path in paths_players:
+            if self.players and self.gold >= 150:
+                path = paths.shortestPathFrom((rob_x, rob_y))
 
+                for player_path in paths_players:
                     if len(player_path) < len(path) and len(player_path) < 8:
-                        minima = min(4,len(player_path) - 1)
+                        minima = min(1, len(player_path) - 1)
                         mine = player_path[minima]
                         mines.append(mine)
                         if random.random() > 1/16:
@@ -393,8 +439,8 @@ class GutKat_player(Player):
 
 
     def trap_random_player(self, status):
-        if self.gold >= 150:
-            if random.random() > (1/64):
+        if self.gold >= 200:
+            if random.random() < (1/64):
                 paths_players = self.paths_players
                 path = self.path
                 for player_path in paths_players:
@@ -405,15 +451,27 @@ class GutKat_player(Player):
 
 
     def fight_target_player(self, status):
-        """
-        Called to ask the player wants to fight an adjacent player
-        @param self the Player itself
-        @param status the status
-        @returns player_id of the enemy
-        Currently the odds of winning are 0.7. The winner gets 5% of the gold of the losing player
-        If a player does not define the method, this step is skipped.
-        """
-        pass
+        self.gold = status.gold
+        self.health = status.health
+
+        myMap = self.myMap
+        rob_x, rob_y = status.x, status.y
+        paths = AllShortestPaths((rob_x, rob_y), myMap)
+        # calculate number of moves to gold
+
+        if self.health >= 50 and self.players:
+            near_enemy = None
+            for iD in self.players:
+                pos = self.players[iD]
+                distance = len(paths.shortestPathFrom(pos))
+                if distance == 1:
+                    near_enemy = iD
+                    break
+            if near_enemy != None:
+                return near_enemy
+            return None
+
+
 
 
 
