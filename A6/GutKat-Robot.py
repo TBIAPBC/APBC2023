@@ -45,10 +45,6 @@ class GutKat_player(Player):
         self.total_cost = 0
 
     def move(self, status):
-        '''
-         Find mines - health reduction
-       idk? make better
-        '''
 
         #get gold, health, gold location, robot location and and map
         self.gold = status.gold
@@ -69,31 +65,6 @@ class GutKat_player(Player):
 
         #check if some of my mines are still valid
         self.check_mines()
-
-        #check map
-        # players = {}
-        # for x in range(myMap.width):
-        #     for y in range(myMap.height):
-        #         tile = status.map[x, y]
-        #         # if we know tile status - remember it
-        #         if tile.status != TileStatus.Unknown:
-        #             myMap[x, y].status = tile.status
-        #             obj = tile.obj
-        #             if obj is not None:
-        #                 if obj.is_gold():
-        #                     continue
-        #                 else:
-        #                     # found myself
-        #                     if obj.is_player(status.player):
-        #                         continue
-        #                     # found other player
-        #                     else:
-        #                         # remember other player in dictionary
-        #                         other_player_id = obj.as_player()
-        #                         players[other_player_id] = (x,y)
-        #
-        # # update map
-        # self.myMap = myMap
 
         # reset players and paths - they (probably) moved in last round
         players = self.players
