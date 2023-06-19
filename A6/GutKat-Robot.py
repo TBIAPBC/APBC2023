@@ -10,38 +10,39 @@ from player_base import Player
 import random
 from shortestpaths import AllShortestPaths
 
-# class MyDumbPlayer(Player):
-#     def reset(self, player_id, max_players, width, height):
-#         self.player_name = "Dumb Kat"
-#         self.ourMap = Map(width, height)
-#         self.moves = [D.up, D.left, D.down, D.right, D.up_left, D.down_left,D.down_right, D.up_right]
-#
-#     def round_begin(self, r):
-#         pass
-#
-#     def move(self, status):
-#         ourMap = self.ourMap
-#         # print("Our Map, before")
-#         for x in range(ourMap.width):
-#             for y in range(ourMap.height):
-#                 if status.map[x, y].status != TileStatus.Unknown:
-#                     ourMap[x, y].status = status.map[x, y].status
-#
-#         self.ourMap = ourMap
-#         x,y = status.x, status.y
-#         numMoves = random.randint(0, 5)
-#         moves = []
-#         for i in range(numMoves):
-#             while True:
-#                 m = self.moves[random.randint(0, len(self.moves) - 1)]
-#                 d_x, d_y = m.as_xy()
-#                 new_x, new_y = x + d_x, y + d_y
-#                 if 0 <= new_y < ourMap.height and 0 <= new_x < ourMap.width:
-#                     if status.map[new_x, new_y].status != TileStatus.Wall:
-#                         moves.append(m)
-#                         x, y = new_x, new_y
-#                         break
-#         return moves
+
+class MyDumbPlayer(Player):
+    def reset(self, player_id, max_players, width, height):
+        self.player_name = "Dumb Kat"
+        self.ourMap = Map(width, height)
+        self.moves = [D.up, D.left, D.down, D.right, D.up_left, D.down_left,D.down_right, D.up_right]
+
+    def round_begin(self, r):
+        pass
+
+    def move(self, status):
+        ourMap = self.ourMap
+        # print("Our Map, before")
+        for x in range(ourMap.width):
+            for y in range(ourMap.height):
+                if status.map[x, y].status != TileStatus.Unknown:
+                    ourMap[x, y].status = status.map[x, y].status
+
+        self.ourMap = ourMap
+        x,y = status.x, status.y
+        numMoves = random.randint(0, 5)
+        moves = []
+        for i in range(numMoves):
+            while True:
+                m = self.moves[random.randint(0, len(self.moves) - 1)]
+                d_x, d_y = m.as_xy()
+                new_x, new_y = x + d_x, y + d_y
+                if 0 <= new_y < ourMap.height and 0 <= new_x < ourMap.width:
+                    if status.map[new_x, new_y].status != TileStatus.Wall:
+                        moves.append(m)
+                        x, y = new_x, new_y
+                        break
+        return moves
 
 
 class GutKat_player(Player):
@@ -77,6 +78,11 @@ class GutKat_player(Player):
         self.total_cost = 0
 
     def move(self, status):
+        '''
+         Find mines - health reduction
+       idk? make better
+        '''
+
         #get gold, health, gold location, robot location and and map
         self.gold = status.gold
         self.health = status.health
@@ -202,20 +208,20 @@ class GutKat_player(Player):
                 except:
                     pass
             # choose random from neighbours remaining
-            if neigh:
-                cor_x, cor_y = random.choice(neigh)
-                # get direction
-                dir_x, dir_y = cor_x - rob_x, cor_y - rob_y
-                # get direction and append it
-                move = coor_to_dir(dir_x, dir_y)
-                moves.append(move)
-                # remove done steps from total steps
-                numMoves -= 1
-                # reset stuck to 0
-                self.stuck = 0
-                # update our position and paths (blocked position)
-                rob_x, rob_y = cor_x, cor_y
-                paths = AllShortestPaths((pot_x, pot_y), myMap)
+            cor_x, cor_y = random.choice(neigh)
+            # get direction
+            dir_x, dir_y = cor_x - rob_x, cor_y - rob_y
+            # get direction and append it
+            move = coor_to_dir(dir_x, dir_y)
+            moves.append(move)
+            # remove done steps from total steps
+            numMoves -= 1
+            # reset stuck to 0
+            self.stuck = 0
+
+            # update our position and paths (blocked position)
+            rob_x, rob_y = cor_x, cor_y
+            paths = AllShortestPaths((pot_x, pot_y), myMap)
 
         # enumerate over our number of steps
         for i in range(0, numMoves):
@@ -336,12 +342,10 @@ class GutKat_player(Player):
         if not gold_amount:
             gold_amount = 100
 
-        #maximal_steps = int(gold/25)
-
         paths_players = self.paths_players
         if paths_players:
             for player_path in paths_players:
-                if self.myMap.width * (1/2) >= (steps_to_gold - len(player_path)):
+                if self.myMap.width * (2/3) >= (steps_to_gold - len(player_path)):
                     return 1
 
         while total_cost <= gold and total_cost <= gold_amount:
@@ -353,8 +357,8 @@ class GutKat_player(Player):
             if max_k >= steps_to_gold:
                 return max_k
 
-        elif gold >= 250:
-            return min(max_k, 3)
+        elif gold >= 300:
+            return min(max_k, 4)
 
         else:
             if self.mode["map"] == "big":
@@ -365,8 +369,8 @@ class GutKat_player(Player):
 
             #steps = round((steps_to_gold / gold_distance) * 4)
             steps = round((max_k / gold_distance) * 4)
-            steps = max(1, steps) #maximal_steps
-            steps = min(3, steps)
+            steps = max(1, steps) #maximal_step
+            steps = min(steps, 3)
             return steps
 
 
@@ -462,4 +466,4 @@ def coor_to_dir(x,y):
     return d_swap[(x,y)]
 
 
-players = [GutKat_player()]
+players = [GutKat_player(), MyDumbPlayer()]
