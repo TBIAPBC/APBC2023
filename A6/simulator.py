@@ -111,6 +111,7 @@ class Simulator(object):
 			self.illustrator.append_goldpots(self._goldPots)
 			self.illustrator.append_robots(self._players)
 			self.illustrator.append_mines(getattr(self,'_mines',{}))
+			self.illustrator.append_traps(self._trap_walls.values())
 
 		print("=" * 80)
 		print("Final board:")
