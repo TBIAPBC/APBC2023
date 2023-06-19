@@ -208,20 +208,20 @@ class GutKat_player(Player):
                 except:
                     pass
             # choose random from neighbours remaining
-            cor_x, cor_y = random.choice(neigh)
-            # get direction
-            dir_x, dir_y = cor_x - rob_x, cor_y - rob_y
-            # get direction and append it
-            move = coor_to_dir(dir_x, dir_y)
-            moves.append(move)
-            # remove done steps from total steps
-            numMoves -= 1
-            # reset stuck to 0
-            self.stuck = 0
-
-            # update our position and paths (blocked position)
-            rob_x, rob_y = cor_x, cor_y
-            paths = AllShortestPaths((pot_x, pot_y), myMap)
+            if neigh:
+                 cor_x, cor_y = random.choice(neigh)
+                 # get direction
+                 dir_x, dir_y = cor_x - rob_x, cor_y - rob_y
+                 # get direction and append it
+                 move = coor_to_dir(dir_x, dir_y)
+                 moves.append(move)
+                 # remove done steps from total steps
+                 numMoves -= 1
+                 # reset stuck to 0
+                 self.stuck = 0
+                 # update our position and paths (blocked position)
+                 rob_x, rob_y = cor_x, cor_y
+                 paths = AllShortestPaths((pot_x, pot_y), myMap)
 
         # enumerate over our number of steps
         for i in range(0, numMoves):
