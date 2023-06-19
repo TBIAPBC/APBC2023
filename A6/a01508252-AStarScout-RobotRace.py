@@ -261,4 +261,99 @@ class MyAStarPlayer(BasePlayer):
 
         return directions
 
-players = [MyAStarPlayer()]
+class AnotherAStarPlayer(Player):
+    """
+    A custom player class implementing the A* search algorithm to find the shortest path to gold.
+    """
+    def __init__(self):
+        super().__init__()
+        self.player_name = "Another AStarScout" 
+        self.ourMap = None
+        self.visited = None
+
+    def reset(self, player_id, max_players, width, height):
+        """
+        Reset the player's state at the beginning of a new game.
+        """
+        self.ourMap = Map(width, height)
+        self.visited = [[0] * width for _ in range(height)]
+
+    def round_begin(self, r):
+        """
+        This method is called at the beginning of each round.
+        """
+        pass
+
+    def _update_map(self, status):
+        """
+        Update our map with the current status of the game map.
+        """
+        for x in range(self.ourMap.width):
+            for y in range(self.ourMap.height):
+                if status.map[x, y].status != TileStatus.Unknown:
+                    self.ourMap[x, y].status = status.map[x, y].status
+
+    def _as_direction(self, curpos, nextpos):
+        """
+        Calculate the direction from the current position to the next position.
+        """
+        for d in D:
+            diff = d.as_xy()
+            if (curpos[0] + diff[0], curpos[1] + diff[1]) == nextpos:
+                return d
+        return None
+
+    def _get_path_to_gold(self, status):
+        """
+        Use the A* search algorithm to find the shortest path to the gold pot with the most gold.
+        """
+        gLoc = max(status.goldPots, key=status.goldPots.get)
+        return a_star_search((status.x, status.y), gLoc, self.ourMap)
+
+    def move(self, status):
+        """
+        Determine the player's move based on the current status.
+        """
+        self._update_map(status)
+        if not status.goldPots: return []
+        path = self._get_path_to_gold(status)
+        if not path: return []
+        directions = [self._as_direction(cur, next) for cur, next in zip(path, path[1:])]
+        num_moves = round((len(directions) / len(path)) * 5)
+        if num_moves > 0 and len(path) / num_moves > status.goldPotRemainingRounds:
+            num_moves = 0
+        return directions[:num_moves]
+
+    def fight_target_player(self, status):
+        """
+        Determine the target player to fight based on the current status.
+        """
+        if not status.others: return None
+        valid_others = [player for player in status.others if player is not None]
+        if not valid_others: return None
+        richest_player = max(valid_others, key=lambda p: p.gold)
+        if status.health > richest_player.health:
+            return richest_player.player
+        return None
+
+    def possible_moves(self, status):
+        """
+        Determine the best possible move based on the current status.
+        """
+        neighbours = [((d, coord), abs(gLoc[0] - dir[0]) + abs(gLoc[1] - dir[1])) for d in D for coord in [(status.x + diff[0], status.y + diff[1])] if 0 <= coord[0] < status.map.width and 0 <= coord[1] < status.map.height and self.ourMap[coord].status != TileStatus.Wall and self.visited[coord[0]][coord[1]] == 0]
+        assert neighbours, "No possible moves"
+        gLoc = next(iter(status.goldPots))
+        best_move = min(neighbours, key=lambda x: x[1])[0][0]
+        return best_move
+
+    def trap_random_player(self, status):
+        """
+        Trap a random player if the player has more gold than us and we have enough gold to set a trap.
+        """
+        gold_others = [p.gold for p in status.others if p is not None]
+        if gold_others:
+            if max(gold_others) > status.gold > 20:
+                return random.choice([True, False])
+        return False
+
+players = [MyAStarPlayer(), AnotherAStarPlayer()]
