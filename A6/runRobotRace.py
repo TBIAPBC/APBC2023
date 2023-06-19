@@ -21,12 +21,12 @@ args = parser.parse_args()
 
 robot_module_names = {  "Test": "test-RobotRace",
                         "Beatme": "beatme-RobotRace",
-                        "a01508252-1": "a01508252-AStarScout-RobotRace.py",
-                        "a01508252-2": "a01508252-AnotherStarScout-RobotRace.py",
+                        "a01508252-1": "a01508252-AStarScout-RobotRace",
+                        "a01508252-2": "a01508252-AnotherAStarScout-RobotRace",
                         "FabioPfae": "FabioPfae_bot",
                         "GutKat": "GutKat-Robot",
                         "KilianG98:": "KilianG98-RobotRace",
-                        "Imiksch": "Imiksch-RobotRace",
+                        "Imiksch": "lmiksch-RobotRace",
                         "Drifters": "sophisticatedDrifters-RobotRace"
                         }
 
