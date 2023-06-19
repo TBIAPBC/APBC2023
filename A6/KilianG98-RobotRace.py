@@ -7,6 +7,8 @@ from game_utils import Tile, TileStatus, TileObject
 from game_utils import Map, Status
 from simulator import Simulator
 from player_base import Player
+from shortestpaths import AllShortestPaths
+from KilianG98_pathFinding import pathFinding
 
 class GandolfTheGrey(Player):
 
@@ -46,213 +48,91 @@ class GandolfTheWhite(Player):
         self.player_name = "GandolfTheWhite"
         self.directions=  {"up": D.up, "down": D.down,"left": D.left,"right": D.right,"upleft": D.up_left,"upright": D.up_right,"downleft": D.down_left, "downright": D.down_right}
         self.map = Map(width, height)
-        self.distToGold = [[1000 for _ in range(width)] for _ in range(height)]
-        self.distToUnexplored = [[1000 for _ in range(width)] for _ in range(height)]
-        self.unexplored = [(x, y) for x in range(width) for y in range(height)]
+        self.allPaths = pathFinding(width,height)
+        
 
     def round_begin(self, r):
         self.round = r
-        pass
+        if r == 150:
+            #it can be assumed that the the middle has been explored after 150 rounds. 
+            #The nonwall tile, that is colesest to the middle of the map is identified.
+            idealTile = (int(self.map.width/2), int(self.map.height/2))
+            minDist = 1000
+            for x in range(self.map.width):
+                for y in range (self.map.height):
+                    tmp = abs(idealTile[0] - x) + abs(idealTile[1] - y)
+                    if tmp < minDist and self.map[(x,y)].status == TileStatus.Empty:
+                        minDist = tmp
+                        self.midTile = (x,y)
+            self.pathsToMid = AllShortestPaths(self.midTile, self.map)
 
+    def fight_target_player(self, status):
+        others = status.others
+        for other in others:
+            print(other.Status.x)
+        for other in others:
+            if other != None:
+                return other.player
+            
     def move(self, status):
+        self.viz = status.params.visibility
+        enemies = self.findPlayers(status)
 
+        print("check1")
         assert len(status.goldPots) > 0
         gLoc = next(iter(status.goldPots))
 
-        if self.distToGold[gLoc[0]][gLoc[1]] != 0:
+        if self.allPaths.distToGold[gLoc[0]][gLoc[1]] != 0:
             #update distance to gold, if gold location has changed
-            self.distToGold = [[1000 for _ in range(self.map.width)] for _ in range(self.map.height)]
-            self.updateDistToGold(status)
-
+            self.allPaths.distToGold = [[1000 for _ in range(self.map.width)] for _ in range(self.map.height)]
+            self.allPaths.updateDistToGold(self, status)
+        print("check2")
         MapIsUpdated = False
 
-        for tile in self.unexplored:
+        for tile in self.allPaths.unexplored:
             #check if any of the unexplored tiles have now been explored
             if status.map[tile].status != TileStatus.Unknown:
                 MapIsUpdated = True
                 self.map[tile].status = status.map[tile].status
-                self.unexplored.remove(tile)
-        
+                self.allPaths.unexplored.remove(tile)
+        print("check3")
         if MapIsUpdated:
             #if the map is updated, the distance to gold matrix may also need to be updated
-            self.updateDistToGold(status)
-
-        if self.distToGold[status.x][status.y] < 1000:
+            self.allPaths.updateDistToGold(self,status)
+            if self.round >= 150:
+                self.pathsToMid = AllShortestPaths(self.midTile,self.map)
+        print("check4")
+        if self.allPaths.distToGold[status.x][status.y] < 1000:
+            for ePos in enemies:
+                if self.allPaths.distToGold[ePos[0]][ePos[1]] < self.allPaths.distToGold[status.x][status.y]:
+                    return[]
             #set gold as target, if path is known
             target = gLoc
             targetIsGold= True
         else:
             #explore map, if path to gold is not known
-            target = self.getNearestUnexplored(status)
+            target = self.allPaths.getNearestUnexplored(self,status)
             targetIsGold = False
-
-        path = self.findPathToTarget(target, status, targetIsGold)
-
-        trimmedPath = self.trim_path(path, status, targetIsGold)
+        print("check5")
+        path = self.allPaths.findPathToTarget(self,target, status, targetIsGold)
+        print("check6")
+        trimmedPath = self.allPaths.trim_path(self, path, status, targetIsGold)
+        print(self.map)
         return trimmedPath
-        
-    def updateDistToGold(self, status):
-        #updates the distance Matrix, each square gets assigned the distance to the next gold location
-        assert len(status.goldPots) > 0
-        gLoc = next(iter(status.goldPots))
-        self.distToGold[gLoc[0]][gLoc[1]] = 0
 
-        tilesToBeUpdated = set(position for _, position in Map.nonWallNeighbours(self.map, gLoc))
-        distance = 0
-
-        while tilesToBeUpdated:
-            
-            distance += 1
-            updatedTiles = set()
-
-            for tile in tilesToBeUpdated:
-                if tile not in self.unexplored:
-                    if self.distToGold[tile[0]][tile[1]] > distance:
-                        self.distToGold[tile[0]][tile[1]] = distance
-                        updatedTiles.add(tile)
-
-            if not updatedTiles:
-                break
-
-            tilesToBeUpdated = set()
-            for tile in updatedTiles:
-                tilesToBeUpdated.update(position for _, position in Map.nonWallNeighbours(self.map, (tile[0], tile[1])))
-
-        return
-    
-    def getNearestUnexplored(self,status):
-        #identifies the nearest unexplored squares, returns the one which is closest to the gold
-        self.distToUnexplored = [[1000 for _ in range(self.map.width)] for _ in range(self.map.height)]
-        self.distToUnexplored[status.x][status.y ] = 0
-
+    def findPlayers(self, status):
         pos = (status.x, status.y)
-        adjacentTiles = set(position for _, position in Map.nonWallNeighbours(self.map, pos))
-        distance = 0
-        nearestUnexplored = []
+        enemies = []
+        for x in range(pos[0]-self.viz,pos[0]+self.viz):
+             for y in range(pos[1]-self.viz,pos[1]+self.viz):
+                try:
+                    tile = status.map[x,y]
+                    if tile.obj is not None and tile.obj.is_player():
+                        # The tile is occupied by a player
+                        if x != pos[0] or y != pos[1]:
+                            enemies.append((x,y))
+                except:
+                    continue
+        return enemies
 
-        while True:
-            
-            distance += 1
-            updatedTiles = set()
-
-            for tile in adjacentTiles:
-                if tile not in self.unexplored:
-                    if self.distToUnexplored[tile[0]][tile[1]] > distance:
-                        self.distToUnexplored[tile[0]][tile[1]] = distance
-                        updatedTiles.add(tile)
-                else: 
-                    nearestUnexplored.append(tile)
-                    self.distToUnexplored[tile[0]][tile[1]] = distance
-
-            if nearestUnexplored != []:
-                break
-
-            adjacentTiles = set()
-            for tile in updatedTiles:
-                adjacentTiles.update(position for _, position in Map.nonWallNeighbours(self.map, (tile[0], tile[1])))
-        
-
-        assert len(status.goldPots) > 0
-        gLoc = next(iter(status.goldPots))
-        min = 99999
-        targetTile = pos
-
-        for t in nearestUnexplored:
-            tmp = abs(gLoc[0] -t[0]) + abs(gLoc[1] - t[1])
-            if tmp < min:
-                min = tmp
-                targetTile = t
-        return targetTile
-        
-    def findPathToTarget(self,target, status,targetIsGold):
-        #receives target square and returns the path to that square
-        #if the target is unknown territory, the last element of the path is removed -> dont step into  a wall
-
-        path = []
-        if targetIsGold:
-
-            pos=(status.x,status.y)
-            steps = self.distToGold[pos[0]][pos[1]]
-            curDistance = self.distToGold[pos[0]][pos[1]]
-
-            for i in range (steps +1):
-                neighbors = set(position for _, position in Map.nonWallNeighbours(self.map,pos))
-                for n in neighbors:
-                    if self.distToGold[n[0]][n[1]] < curDistance:
-                        curDistance -=1
-                        path.append(self.get_direction(pos[0], pos[1], n[0], n[1]))
-                        pos = n
-                        break
-
-        
-        else:
-            pos=(target[0], target[1])
-            steps = self.distToUnexplored[pos[0]] [pos[1]]
-            curDistance= self.distToUnexplored [pos[0]][pos[1]]
-
-            for i in range(steps +1):
-                neighbors = set(position for _, position in Map.nonWallNeighbours(self.map,pos))
-                for n in neighbors:
-                    if self.distToUnexplored[n[0]][n[1]] < curDistance:
-                        curDistance -=1
-                        path = [self.get_direction(n[0], n[1], pos[0], pos[1])] + path
-                        pos = n
-                        break
-        
-
-        return path
-    
-    def get_direction(self,from_col,from_row, to_col, to_row,):
-        #returns the direction one needs to go between to neighboring squares
-
-        direction = ""
-        # Determine vertical direction
-        if from_row > to_row:
-            direction += "down"
-        elif from_row < to_row:
-            direction += "up"
-
-        # Determine horizontal direction
-        if from_col > to_col:
-            direction += "left"
-        elif from_col < to_col:
-            direction += "right"
-
-        return self.directions[direction]
-
-    def trim_path(self,path,status,targetIsGold):
-        #receives the path, returns a trimmed version depending on cost & reward
-        for key, val in status.goldPots.items():
-            reward = val
-
-        pathCost= (len(path)/2) *(len(path) +1 )
-        if self.round <= 100:
-            if targetIsGold:
-                if pathCost <= self.status.gold and pathCost < reward:
-                    return path
-                if self.status.gold > 70:
-                    if len(path) > 1:
-                        return([path[0], path[1]])
-                    else:
-                        return path
-            else:
-                if self.status.gold > 90:
-                    if len(path) > 1:
-                        return([path[0], path[1]])
-                    else:
-                        return path
-        else:
-            if targetIsGold:
-                if len(path) <= ((self.map.width + self.map.height )/2):
-                    if pathCost <= self.status.gold and pathCost < reward:
-                        return path
-                    else:
-                        return[path[0]]
-        return([])
-
-
-
-players = [GandolfTheGrey(), GandolfTheWhite()]
-
-
-
+players= [GandolfTheWhite()]
