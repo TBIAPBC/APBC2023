@@ -46,7 +46,11 @@ class Simulator(object):
 
 		# keep a dictionary of the mines
 		# (x, y) -> expiry_round -- the round in which the mine should expire
-		self._mines = {}  
+		self._mines = {}
+
+		# dictionary of trap walls
+		# player id -> [(x, y), (x,y), (x,y), (x,y), (x, y), (x,y), (x,y), (x,y)]
+		self._trap_walls = {}  
 
 		# the internal data, without map
 		self._status = status = []
@@ -99,6 +103,8 @@ class Simulator(object):
 			self._begin_round(r)
 			self._handle_shooting(r)
 			self._handle_setting_mines(r)
+			self._handle_trapping()
+			self._handle_fighting()
 			self._handle_moving(r)
 			self._handle_healing(r)
 			# TODO: something to do at the end of the round?
@@ -133,6 +139,12 @@ class Simulator(object):
 				del self._mines[xy]
 				self.map[xy] = Tile(TileStatus.Empty)
 				print("Remove expired mine at %s." % (str(xy)) )
+		
+		# remove traps from last round
+		for pId, trap in self._trap_walls.items():
+			for wall in trap:
+				self.map[wall] = Tile(TileStatus.Empty)
+		self._trap_walls = {}
 
 		# relocate gold pots if timed out
 		self.goldPotRemainingRounds -=1
@@ -238,6 +250,125 @@ class Simulator(object):
 							% (str(pId), str(xy), d, self._mines[xy]) )
 				else:
 					break # don't even try to set more mines
+	
+	def _pay_for_trap(self, pId):
+		s = self._status[pId]  # get the status of the player
+		cost = 20
+		if s.gold < cost:  # of the player cannot afford it, return false
+			return False
+		s.gold -= cost
+		self._tasksThisRound[pId] += 1
+		for pos in self._goldPots:
+			if self.params.goldDecrease and self.goldPotRemainingRounds <= self.params.goldDecreaseTime:
+				self._goldPots[pos] -= 1
+			else:
+				self._goldPots[pos] += 1
+		return True
+
+	def _handle_trapping(self):
+		for pId in range(len(self._players)):  # go through each player
+			player = self._players[pId]
+			set_trap = False
+			try:
+				set_trap = player.trap_random_player(self._pubStat[pId])  # ask them if they want to set a trap
+			except NotImplementedError:  # if it has not been implemented, set_trap will stay false
+				pass
+			except Exception as e:
+				print("ERROR: player %d raised an exception: %s" % (pId, str(e)))
+				traceback.print_exc(file=sys.stdout)
+			players_pool = []
+			if set_trap:
+				if not self._pay_for_trap(pId):  # check if player paid for trap
+					players_pool = [pId]  # punishment for not being able to pay is getting trapped
+				else:
+					wealth = []
+					for rid in range(len(self._players)):
+						if rid == pId:
+							continue
+						wealth.append(self._players[rid].status.gold)
+					wealthiest = wealth.index(max(wealth))
+					for rid in range(len(self._players)):  # create a pool where the trapped player will be drawn from
+						if rid not in self._trap_walls:  # only players that are not already trapped
+							if rid != pId:
+								if rid == wealthiest:
+									players_pool.extend([rid, rid, rid, rid, rid, rid, rid, rid])
+								else:
+									players_pool.extend([rid, rid])
+							else:
+								players_pool.append(pId)  # the trapper is also in the pool, but only once
+				if not players_pool:
+					return
+				trap_pId = random.choice(players_pool)  # choose random player from pool
+				tId_status = self._players[trap_pId].status
+				wall_coords = [(tId_status.x - 1, tId_status.y), (tId_status.x + 1, tId_status.y),
+							   # coordinates where the walls should be
+							   (tId_status.x, tId_status.y - 1), (tId_status.x, tId_status.y + 1),
+							   (tId_status.x - 1, tId_status.y - 1), (tId_status.x + 1, tId_status.y + 1),
+							   (tId_status.x + 1, tId_status.y - 1), (tId_status.x - 1, tId_status.y + 1)]
+
+				# build walls where appropriate (not outside of the map, not on objects or where there are already walls)
+				for coords in wall_coords:
+					if coords[0] < self.map.width and coords[1] < self.map.height and coords[0] >= 0 and coords[
+						1] >= 0 and not self.map[coords].is_blocked() and self.map[coords].obj is None:
+						if trap_pId not in self._trap_walls:
+							self._trap_walls[trap_pId] = [coords]
+						else:
+							self._trap_walls[trap_pId].append(coords)
+						self.map[coords] = Tile(TileStatus.Wall)
+				print(f"Player {pId} trapped player {trap_pId} for this round.")
+	
+	def _handle_fighting(self):
+		for pId in range(len(self._players)):  # go through each player
+			player = self._players[pId]
+			fight_target = False
+			try:
+				fight_target = player.fight_target_player(self._pubStat[pId])  # ask them if they want to fight a player 
+			except NotImplementedError:  # if it has not been implemented, fight_target will stay false
+				pass
+			except Exception as e:
+				print("ERROR: player %d raised an exception: %s" % (pId, str(e)))
+				traceback.print_exc(file=sys.stdout)
+
+			if fight_target:
+				enemy = self._players[fight_target]
+				#check if players are adjacent to each other
+				pLoc = (player.status.x,player.status.y)
+				eLoc = (enemy.status.x,enemy.status.y)
+				if abs(pLoc[0]- eLoc[0]) <= 1 and abs(pLoc[1] - eLoc[1]) <= 1:
+					eHealth = enemy.status.health
+					pHealth = player.status.health
+
+					#adjust winning odds based on health difference
+					health_odds = 0
+					if eHealth != pHealth:
+						health_odds = ((pHealth - eHealth)/100)*0.3 
+
+					pWin = 0.7 + health_odds
+					pLose = 0.3 + health_odds
+					weights = [pWin,pLose]
+					choices = ["player","enemy"]
+					winner = random.choices(choices, weights)[0]
+
+					if winner == "player":
+						winner, loser  = self._players[pId], self._players[fight_target]
+						player.status.health -= 5
+						enemy.status.health  -= 10
+					else:
+						winner, loser = self._players[fight_target], self._players[pId]
+						player.status.health -= 15
+						enemy.status.health  -= 5
+
+					#update gold
+					earnings = round(loser.status.gold*0.05) 
+					winner.status.gold += round(loser.status.gold*0.05) 
+					loser.status.gold -= round(loser.status.gold*0.05)
+
+					print(" ")
+					print(f"Player {winner.status.player} won against Player {loser.status.player} and stole {earnings} Gold .")
+					print(f"Player {winner.status.player} is currently at {winner.status.health} Health")
+					print(f"Player {loser.status.player} is currently at {loser.status.health} Health")
+					print(" ")
+
 
 	def _askPlayerForMoves(self,pId):
 		try:
