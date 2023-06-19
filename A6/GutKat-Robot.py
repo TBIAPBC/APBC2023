@@ -10,38 +10,6 @@ from player_base import Player
 import random
 from shortestpaths import AllShortestPaths
 
-# class MyDumbPlayer(Player):
-#     def reset(self, player_id, max_players, width, height):
-#         self.player_name = "Dumb Kat"
-#         self.ourMap = Map(width, height)
-#         self.moves = [D.up, D.left, D.down, D.right, D.up_left, D.down_left,D.down_right, D.up_right]
-#
-#     def round_begin(self, r):
-#         pass
-#
-#     def move(self, status):
-#         ourMap = self.ourMap
-#         # print("Our Map, before")
-#         for x in range(ourMap.width):
-#             for y in range(ourMap.height):
-#                 if status.map[x, y].status != TileStatus.Unknown:
-#                     ourMap[x, y].status = status.map[x, y].status
-#
-#         self.ourMap = ourMap
-#         x,y = status.x, status.y
-#         numMoves = random.randint(0, 5)
-#         moves = []
-#         for i in range(numMoves):
-#             while True:
-#                 m = self.moves[random.randint(0, len(self.moves) - 1)]
-#                 d_x, d_y = m.as_xy()
-#                 new_x, new_y = x + d_x, y + d_y
-#                 if 0 <= new_y < ourMap.height and 0 <= new_x < ourMap.width:
-#                     if status.map[new_x, new_y].status != TileStatus.Wall:
-#                         moves.append(m)
-#                         x, y = new_x, new_y
-#                         break
-#         return moves
 
 
 class GutKat_player(Player):
