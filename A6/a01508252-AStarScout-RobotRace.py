@@ -309,7 +309,7 @@ class AnotherAStarPlayer(Player):
         """
         gLoc = max(status.goldPots, key=status.goldPots.get)
         return a_star_search((status.x, status.y), gLoc, self.ourMap)
-
+    
     def move(self, status):
         """
         Determine the player's move based on the current status.
@@ -319,7 +319,7 @@ class AnotherAStarPlayer(Player):
         path = self._get_path_to_gold(status)
         if not path: return []
         directions = [self._as_direction(cur, next) for cur, next in zip(path, path[1:])]
-        num_moves = round((len(directions) / len(path)) * 5)
+        num_moves = min(len(path), max(1, int(25 / len(path))))
         if num_moves > 0 and len(path) / num_moves > status.goldPotRemainingRounds:
             num_moves = 0
         return directions[:num_moves]
@@ -332,9 +332,39 @@ class AnotherAStarPlayer(Player):
         valid_others = [player for player in status.others if player is not None]
         if not valid_others: return None
         richest_player = max(valid_others, key=lambda p: p.gold)
-        if status.health > richest_player.health:
+        if status.health >= richest_player.health and status.player != richest_player.player:
             return richest_player.player
         return None
+
+    def set_mines(self, status):
+        """
+        Set mines based on the positions of other players and the gold pot. 
+        """
+        my_pos = (status.x, status.y)
+        gold_pos = list(status.goldPots.keys())[0]
+
+        # find others
+        other_players = {p_idx: (other_player.x, other_player.y) for p_idx, other_player in enumerate(status.others) if other_player is not None and p_idx != status.player and 100 < status.gold < other_player.gold}
+
+        potential_mine_locations = [p_pos for p, p_pos in other_players.items() if 2 < self.dist(my_pos, p_pos) < 5]
+
+        if random.randint(0,10) < 8 and potential_mine_locations:
+            mines = []
+            for p_pos in potential_mine_locations:
+                primary_mine_pos, additional_mines = self.where_to_mine(p_pos, gold_pos)
+                assert 0 <= primary_mine_pos[0] < self.ourMap.width and 0 <= primary_mine_pos[1] < self.ourMap.height
+                mines.append(primary_mine_pos)
+                if random.randint(0, 10) < 5 and additional_mines:
+                    mines.extend(additional_mines)
+
+            for mine in mines:
+                x, y = mine
+                self.ourMap[x, y].status = TileStatus.Mine
+
+            return mines
+
+        return []
+
 
     def possible_moves(self, status):
         """
@@ -350,10 +380,12 @@ class AnotherAStarPlayer(Player):
         """
         Trap a random player if the player has more gold than us and we have enough gold to set a trap.
         """
-        gold_others = [p.gold for p in status.others if p is not None]
-        if gold_others:
-            if max(gold_others) > status.gold > 20:
-                return random.choice([True, False])
-        return False
+        other_players_gold = [other.gold for other in status.others if other is not None]
+        richest_other_player_gold = max(other_players_gold) if other_players_gold else 0
+        if richest_other_player_gold > status.gold > 20:
+            return random.choices([True, False], weights=[5, 5], k=1)[0]
+        else:
+            return False
+
 
 players = [MyAStarPlayer(), AnotherAStarPlayer()]
