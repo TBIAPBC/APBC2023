@@ -69,8 +69,6 @@ class GandolfTheWhite(Player):
     def fight_target_player(self, status):
         others = status.others
         for other in others:
-            print(other.Status.x)
-        for other in others:
             if other != None:
                 return other.player
             
@@ -78,7 +76,6 @@ class GandolfTheWhite(Player):
         self.viz = status.params.visibility
         enemies = self.findPlayers(status)
 
-        print("check1")
         assert len(status.goldPots) > 0
         gLoc = next(iter(status.goldPots))
 
@@ -86,7 +83,7 @@ class GandolfTheWhite(Player):
             #update distance to gold, if gold location has changed
             self.allPaths.distToGold = [[1000 for _ in range(self.map.width)] for _ in range(self.map.height)]
             self.allPaths.updateDistToGold(self, status)
-        print("check2")
+
         MapIsUpdated = False
 
         for tile in self.allPaths.unexplored:
@@ -95,13 +92,11 @@ class GandolfTheWhite(Player):
                 MapIsUpdated = True
                 self.map[tile].status = status.map[tile].status
                 self.allPaths.unexplored.remove(tile)
-        print("check3")
         if MapIsUpdated:
             #if the map is updated, the distance to gold matrix may also need to be updated
             self.allPaths.updateDistToGold(self,status)
             if self.round >= 150:
                 self.pathsToMid = AllShortestPaths(self.midTile,self.map)
-        print("check4")
         if self.allPaths.distToGold[status.x][status.y] < 1000:
             for ePos in enemies:
                 if self.allPaths.distToGold[ePos[0]][ePos[1]] < self.allPaths.distToGold[status.x][status.y]:
@@ -113,11 +108,8 @@ class GandolfTheWhite(Player):
             #explore map, if path to gold is not known
             target = self.allPaths.getNearestUnexplored(self,status)
             targetIsGold = False
-        print("check5")
         path = self.allPaths.findPathToTarget(self,target, status, targetIsGold)
-        print("check6")
         trimmedPath = self.allPaths.trim_path(self, path, status, targetIsGold)
-        print(self.map)
         return trimmedPath
 
     def findPlayers(self, status):
