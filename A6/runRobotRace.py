@@ -20,15 +20,15 @@ args = parser.parse_args()
 
 
 # I did not include 'probably greedy' since it has not incorporated the new features yet
-robot_module_names = {  #"Test": "test-RobotRace",
-                        #"Beatme": "beatme-RobotRace",
-                        "a01508252-1": "a01508252-RobotRace",
+robot_module_names = {  "a01508252-1": "a01508252-RobotRace",
+                        "a01508252-2": "a01508252-RobotRace-Naive",
                         "FabioPfae": "FabioPfae_bot",
                         "KilianG98:": "KilianG98-RobotRace",
                         "Imiksch": "lmiksch-RobotRace",
                         "Naive Drifter": "naiveDrifter-RobotRace",
                         "Drifters": "sophisticatedDrifters-RobotRace",
-                        "GutKat": "GutKat-Robot",
+                        "GutKat1": "GutKat-Robot",
+                        "GutKat2": "GutKat_robots",
                         "JulianZim": "jjz-RobotRace"
 }
 

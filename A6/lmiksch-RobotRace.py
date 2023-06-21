@@ -335,4 +335,4 @@ class lmiksch_naive(Player):
 
     
 
-players = [lmiksch_bot()]
+players = [lmiksch_bot(), lmiksch_naive()]

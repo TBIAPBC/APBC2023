@@ -127,4 +127,4 @@ class GandolfTheWhite(Player):
                     continue
         return enemies
 
-players= [GandolfTheWhite()]
+players= [GandolfTheWhite(), GandolfTheGrey()]
