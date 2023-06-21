@@ -121,6 +121,25 @@ class BasePlayer(Player):
             return random.choice(possible_directions)
         else:
             return None
+        
+
+class naivePlayer(BasePlayer):
+    """
+    A naive player that moves in a random direction that isn't a wall.
+    """
+    def __init__(self):
+        super().__init__("NaiveScout")
+
+    def move(self, status):
+        """
+        Determines the moves for the player in the current turn.
+
+        This player will simply try to move in a random direction that isn't a wall.
+        If it can't move, it will stay in place.
+        """
+        our_map = status.map
+        curpos = (status.x, status.y)
+        return [self.random_valid_direction(curpos, our_map)]
 
 
 class MyAStarPlayer(BasePlayer):
@@ -388,4 +407,4 @@ class AnotherAStarPlayer(Player):
             return False
 
 
-players = [MyAStarPlayer(), AnotherAStarPlayer()]
+players = [naivePlayer(), MyAStarPlayer(), AnotherAStarPlayer()]
