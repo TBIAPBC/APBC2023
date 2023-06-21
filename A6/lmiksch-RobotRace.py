@@ -278,9 +278,6 @@ class lmiksch_naive(Player):
         move = self.possible_moves(status,ourMap,self.visited)
 
 
-
-     
-
         
         return [move]
 
@@ -338,4 +335,4 @@ class lmiksch_naive(Player):
 
     
 
-players = [lmiksch_bot(),lmiksch_naive()]
+players = [lmiksch_bot()]

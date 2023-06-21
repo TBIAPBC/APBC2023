@@ -277,27 +277,16 @@ class Simulator(object):
 			except Exception as e:
 				print("ERROR: player %d raised an exception: %s" % (pId, str(e)))
 				traceback.print_exc(file=sys.stdout)
-
-			players_pool = []
 			if set_trap:
 				if not self._pay_for_trap(pId):  # check if player paid for trap
-					players_pool = [pId]  # punishment for not being able to pay is getting trapped
-				else:
-					wealth = []
-					for rid in range(len(self._players)):
-						if rid == pId:
-							continue
-						wealth.append(self._players[rid].status.gold)
-					wealthiest = wealth.index(max(wealth))
-					for rid in range(len(self._players)):  # create a pool where the trapped player will be drawn from
-						if rid not in self._trap_walls:  # only players that are not already trapped
-							if rid != pId:
-								if rid == wealthiest:
-									players_pool.extend([rid, rid, rid, rid, rid, rid, rid, rid])
-								else:
-									players_pool.extend([rid, rid])
-							else:
-								players_pool.append(pId)  # the trapper is also in the pool, but only once
+					break
+				players_pool = []
+				for rid in range(len(self._players)):  # create a pool where the trapped player will be drawn from
+					if rid not in self._trap_walls:  # only players that are not already trapped
+						if rid != pId:
+							players_pool.extend([rid, rid, rid, rid])
+						else:
+							players_pool.append(pId)  # the trapper is also in the pool, but only once
 				if not players_pool:
 					return
 				trap_pId = random.choice(players_pool)  # choose random player from pool
@@ -325,7 +314,7 @@ class Simulator(object):
 			player = self._players[pId]
 			fight_target = False
 			try:
-				fight_target = player.fight_target_player(self._pubStat[pId])  # ask them if they want to fight a player 
+				fight_target = player.fight_target_player(self._pubStat[pId])  # ask them if they want to fight a player
 			except NotImplementedError:  # if it has not been implemented, fight_target will stay false
 				pass
 			except Exception as e:
@@ -344,14 +333,14 @@ class Simulator(object):
 					#adjust winning odds based on health difference
 					health_odds = 0
 					if eHealth != pHealth:
-						health_odds = ((pHealth - eHealth)/100)*0.3 
+						health_odds = ((pHealth - eHealth)/100)*0.3
 
 					pWin = 0.7 + health_odds
 					pLose = 0.3 + health_odds
 					weights = [pWin,pLose]
 					choices = ["player","enemy"]
 					winner = random.choices(choices, weights)[0]
-					
+
 					if winner == "player":
 						winner, loser  = self._players[pId], self._players[fight_target]
 						player.status.health -= 5
@@ -362,8 +351,8 @@ class Simulator(object):
 						enemy.status.health  -= 5
 
 					#update gold
-					earnings = round(loser.status.gold*0.05) 
-					winner.status.gold += round(loser.status.gold*0.05) 
+					earnings = round(loser.status.gold*0.05)
+					winner.status.gold += round(loser.status.gold*0.05)
 					loser.status.gold -= round(loser.status.gold*0.05)
 
 					print(" ")
@@ -371,7 +360,12 @@ class Simulator(object):
 					print(f"Player {winner.status.player} is currently at {winner.status.health} Health")
 					print(f"Player {loser.status.player} is currently at {loser.status.health} Health")
 					print(" ")
-					
+
+
+
+
+
+
 
 	def _askPlayerForMoves(self,pId):
 		try:

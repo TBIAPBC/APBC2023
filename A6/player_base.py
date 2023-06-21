@@ -55,7 +55,7 @@ class Player(object):
 	def fight_target_player(self,status):
 
 		"""
-		
+
 			Called to ask the player wants to fight an adjacent player
 
 				@param self the Player itself
@@ -68,8 +68,8 @@ class Player(object):
 				If a player does not define the method, this step is
 				skipped.
 
-		
+
 		"""
-		
+
 
 		raise NotImplementedError("fight_target_player' not implemented in '%s'." % self.__class__)
