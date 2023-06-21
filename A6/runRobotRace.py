@@ -18,7 +18,7 @@ parser.add_argument('--map', help="specify map file", type=str,default=None)
 
 args = parser.parse_args()
 
-
+# I did not include 'probably greedy' since it has not incorporated the new features yet
 robot_module_names = {  #"Test": "test-RobotRace",
                         #"Beatme": "beatme-RobotRace",
                         "a01508252-1": "a01508252-RobotRace",
@@ -26,8 +26,9 @@ robot_module_names = {  #"Test": "test-RobotRace",
                         "KilianG98:": "KilianG98-RobotRace",
                         "Imiksch": "lmiksch-RobotRace",
                         "Drifters": "sophisticatedDrifters-RobotRace",
-                        "GutKat": "GutKat-Robot"
-                        }
+                        "GutKat": "GutKat-Robot",
+                        "JulianZim": "jjz-RobotRace"
+}
 
 
 #robotmodules = { m:__import__('Robots/' + m) for m in robot_module_names.values() }

@@ -8,25 +8,27 @@ class ProbablyGreedy:
 		self.player_name = None
 
 	def convert_move(self, current_coordinates, move_coordinates):
-		relative_coordiantes = (
-			move_coordinates[0] - current_coordinates[0], move_coordinates[1] - current_coordinates[1])
-		match relative_coordiantes:
-			case (-1, 1):
-				return Direction.up_left
-			case (-1, 0):
-				return Direction.left
-			case (-1, -1):
-				return Direction.down_left
-			case (0, 1):
-				return Direction.up
-			case (0, -1):
-				return Direction.down
-			case (1, 1):
-				return Direction.up_right
-			case (1, 0):
-				return Direction.right
-			case (1, -1):
-				return Direction.down_right
+		relative_coordinates = (
+			move_coordinates[0] - current_coordinates[0], move_coordinates[1] - current_coordinates[1]
+		)
+		if relative_coordinates == (-1, 1):
+			return Direction.up_left
+		elif relative_coordinates == (-1, 0):
+			return Direction.left
+		elif relative_coordinates == (-1, -1):
+			return Direction.down_left
+		elif relative_coordinates == (0, 1):
+			return Direction.up
+		elif relative_coordinates == (0, -1):
+			return Direction.down
+		elif relative_coordinates == (1, 1):
+			return Direction.up_right
+		elif relative_coordinates == (1, 0):
+			return Direction.right
+		elif relative_coordinates == (1, -1):
+			return Direction.down_right
+		else:
+			raise RuntimeError('This should be impossible?')
 
 	def non_wall_neighbours(self, status, x, y):
 		free_neighbours = list()

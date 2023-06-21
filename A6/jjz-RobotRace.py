@@ -38,25 +38,24 @@ def convert_move(current_coordinates, move_coordinates):
 	relative_coordinates = (
 		move_coordinates[0] - current_coordinates[0], move_coordinates[1] - current_coordinates[1]
 	)
-	match relative_coordinates:
-		case (-1, 1):
-			return Direction.up_left
-		case (-1, 0):
-			return Direction.left
-		case (-1, -1):
-			return Direction.down_left
-		case (0, 1):
-			return Direction.up
-		case (0, -1):
-			return Direction.down
-		case (1, 1):
-			return Direction.up_right
-		case (1, 0):
-			return Direction.right
-		case (1, -1):
-			return Direction.down_right
-		case _:
-			raise RuntimeError('This should be impossible?')
+	if relative_coordinates == (-1, 1):
+		return Direction.up_left
+	elif relative_coordinates == (-1, 0):
+		return Direction.left
+	elif relative_coordinates == (-1, -1):
+		return Direction.down_left
+	elif relative_coordinates == (0, 1):
+		return Direction.up
+	elif relative_coordinates == (0, -1):
+		return Direction.down
+	elif relative_coordinates == (1, 1):
+		return Direction.up_right
+	elif relative_coordinates == (1, 0):
+		return Direction.right
+	elif relative_coordinates == (1, -1):
+		return Direction.down_right
+	else:
+		raise RuntimeError('This should be impossible?')
 
 
 def chose_candidate(candidates, sharpness=None):
@@ -135,18 +134,20 @@ class IntelliBot(Player):
 		return gold_pots_in_view_range, gold_pots_out_of_view_range
 
 	def map_to_string(self, status):
-		# return '\n'.join(' '.join(str(tile) for tile in row) for row in reversed(self.map_grid)) + '\n'
 		string_map = copy.deepcopy(self.map)
 		for i in range(len(string_map)):
 			for j in range(len(string_map[i])):
 				if (status.x, status.y) == (j, i):
 					string_map[i][j] = 'P'
 				else:
-					match string_map[i][j]:
-						case 1: string_map[i][j] = '.'
-						case -1: string_map[i][j] = '#'
-						case -2: string_map[i][j] = 'x'
-						case -3: string_map[i][j] = 'P'
+					if string_map[i][j] == 1:
+						string_map[i][j] = '.'
+					elif string_map[i][j] == -1:
+						string_map[i][j] = '#'
+					elif string_map[i][j] == -2:
+						string_map[i][j] = 'x'
+					elif string_map[i][j] == -3:
+						string_map[i][j] = 'P'
 
 		return '\n'.join(' '.join(tile for tile in row) for row in string_map) + '\n'
 
