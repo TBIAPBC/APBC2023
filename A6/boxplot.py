@@ -6,7 +6,7 @@ gold = {'a': [], 'b': [], 'c': [], 'd': [], 'e': [], 'f': [], 'g': [], 'h': [], 
 
 
 # Read the file
-with open('test.txt', 'r') as file:
+with open('tester.txt', 'r') as file:
     read_players = False
     line = file.readline()
     while line:
@@ -81,9 +81,11 @@ for i, box in enumerate(boxplot['boxes']):
     box.set_facecolor(colors[i])
 
 # Add violin plots of the gold values to the third subplot
-violin_parts = axes[1, 0].violinplot(gold_values, showmedians=True, showextrema=False)
-for idx, pc in enumerate(violin_parts['bodies']):
-    pc.set_facecolor(colors[idx])
+for x in gold_values:
+    print(x)
+#violin_parts = axes[1, 0].violinplot(gold_values, showmedians=True, showextrema=False)
+#for idx, pc in enumerate(violin_parts['bodies']):
+#    pc.set_facecolor(colors[idx])
 
 axes[1, 0].set_ylabel('Gold')
 axes[1, 0].grid(axis='y', which='both')

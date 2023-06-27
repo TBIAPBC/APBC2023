@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # Loop 100 times
-for ((i=1; i<=200; i++))
+for ((i=1; i<=100; i++))
 do
   # Execute the command and capture the output
-  output=$(python runRobotRace.py --number 100)
+  output=$(python runRobotRace.py --number 1000)
 
   # Extract the desired part of the output and store it in a text file
   desired_output=$(echo "$output" | awk '/Final board:/{flag=1; next} flag')
